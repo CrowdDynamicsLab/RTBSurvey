@@ -5,7 +5,7 @@ from selenium.common.exceptions import TimeoutException
 from OpenWPM.automation import TaskManager, CommandSequence
 import os, time
 from urlparse import urlparse, urljoin
-from OpenWPM.automation.Commands.utils.webdriver_extensions import wait_until_loaded, scroll_down, \
+from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, \
     scroll_to_element, move_to_element, is_75percent_scrolled, scroll_percent
 
 MAX_PAGES_PER_LANDING_PAGE = 10
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         'https://www.reddit.com/r/worldnews/': get_reddit_stories,
         'https://www.reddit.com/r/news': get_reddit_stories
     }
-    cs = CrawlStrategy("news", [], crawl_dict)
+    cs = CrawlStrategy("news", ['https://www.vox.com'], crawl_dict)
     cs.crawl()
 
     # and the "substantive" news crawl
