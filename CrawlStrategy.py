@@ -44,10 +44,10 @@ class CrawlStrategy():
                 if len(valid_divs) == 0:
                     print 'WARNING: Tried to access div index {} but there were only {} valid_divs'.format(i, len(valid_divs))
                 else:
-                    href = valid_divs[i].get_attribute("href")
-                    scroll_to_element(webdriver, valid_divs[i])
+                    href = valid_divs[0].get_attribute("href")
+                    scroll_to_element(webdriver, valid_divs[0])
                     time.sleep(1)
-                    move_to_element(webdriver, valid_divs[i])
+                    move_to_element(webdriver, valid_divs[0])
 
                     already_visited.add(href)
                     webdriver.get(href)
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         'https://www.reddit.com/r/worldnews/': get_reddit_stories,
         'https://www.reddit.com/r/news': get_reddit_stories
     }
-    cs = CrawlStrategy("news", ['https://www.vox.com'], crawl_dict)
+    cs = CrawlStrategy("news", [], crawl_dict)
     cs.crawl()
 
     # and the "substantive" news crawl
