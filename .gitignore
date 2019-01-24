@@ -1,3 +1,4 @@
 .idea/
 profiles/
 crawl_data/
+*.pyc
