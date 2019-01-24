@@ -1,5 +1,5 @@
 from random import shuffle, random
-
+import datetime
 from selenium.common.exceptions import TimeoutException
 
 from OpenWPM.automation import TaskManager, CommandSequence
@@ -16,7 +16,7 @@ class CrawlStrategy():
     # from according to the extraction rule in the value
     # so a key/value pair might be
     # https://www.reddit.com/r/worldnews/ -> a function that gives a page element for the browser to click on
-    def __init__(self, profile_name, crawl_pages, landing_and_extraction):
+    def __init__(self, profile_name, crawl_pages, landing_and_extraction, time_restrictions=None):
         self.profile_name = profile_name
         self.crawl_pages = crawl_pages
         self.landing_and_extraction = landing_and_extraction
@@ -24,11 +24,39 @@ class CrawlStrategy():
             os.makedirs('profiles/{}/'.format(self.profile_name))
         if not os.path.exists('crawl_data/{}/'.format(self.profile_name)):
             os.makedirs('crawl_data/{}/'.format(self.profile_name))
+        if not time_restrictions:
+            time_restrictions = {}
+
+        if 'time_of_day_min' not in time_restrictions:
+            self.time_of_day_min = "00:00:01"
+        else:
+            self.time_of_day_min = time_restrictions['time_of_day_min']
+        if 'time_of_day_max' not in time_restrictions:
+            self.time_of_day_max = "23:59:59"
+        else:
+            self.time_of_day_max = time_restrictions['time_of_day_max']
+        if 'crawl_interval' not in time_restrictions:
+            self.crawl_interval = 720  # default to crawl no more often than every 12 hours
+        else:
+            self.crawl_interval = time_restrictions['crawl_interval']
+        self.last_crawl = datetime.datetime(2000, 12, 1)
 
 
     # just return true for now, can use this for throttling and time of day logic
     def can_crawl(self):
+        if datetime.datetime.now() < self.last_crawl + datetime.timedelta(minutes=self.crawl_interval):
+            return False
+        now = datetime.datetime.now()
+        min_array = self.time_of_day_min.split(':')
+        min_dt = datetime.datetime(now.year, now.month, now.day, hour=int(min_array[0]), minute=int(min_array[1]), second=int(min_array[2]))
+        if now < min_dt:
+            return False
+        max_array = self.time_of_day_max.split(':')
+        max_dt = datetime.datetime(now.year, now.month, now.day, hour=int(max_array[0]), minute=int(max_array[1]), second=int(max_array[2]))
+        if now > max_dt:
+            return False
         return True
+
 
     def my_custom_function(self, num_pages, landing_page, rule):
         def result(**kwargs):
@@ -92,6 +120,8 @@ class CrawlStrategy():
         return result
 
     def crawl(self):
+        self.last_crawl = datetime.datetime.now()
+        return
         # initialize crawler
         manager_params, browser_params = TaskManager.load_default_params()
         browser_params[0]['http_instrument'] = True
@@ -127,6 +157,7 @@ class CrawlStrategy():
             manager.execute_command_sequence(command_sequence, index='**')
 
         manager.close()
+        self.last_crawl = time.time()
 
 
 
