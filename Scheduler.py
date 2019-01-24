@@ -44,7 +44,7 @@ def setup_barber5_reddit():
         'https://monocle.com/'
     ]
     time_restrictions = {
-        'crawl_interval': 5,
+        'crawl_interval': 780,
         'time_of_day_min': '20:00:00',
         'time_of_day_max': '22:00:00'
     }

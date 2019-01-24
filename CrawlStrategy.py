@@ -121,7 +121,6 @@ class CrawlStrategy():
 
     def crawl(self):
         self.last_crawl = datetime.datetime.now()
-        return
         # initialize crawler
         manager_params, browser_params = TaskManager.load_default_params()
         browser_params[0]['http_instrument'] = True
@@ -157,10 +156,6 @@ class CrawlStrategy():
             manager.execute_command_sequence(command_sequence, index='**')
 
         manager.close()
-        self.last_crawl = time.time()
-
-
-
 
 
 if __name__ == "__main__":
