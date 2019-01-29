@@ -1,3 +1,6 @@
+## Checking out this repository
+We are using OpenWPM as a submodule, so after cloning this repository, cd into the directory and type `git submodule update --init OpenWPM/`
+
 ## How to specify crawling behavior
 We support a limited range of crawling behaviors at the moment, but that means the instructions will be simple. 
 
