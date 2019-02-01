@@ -1,6 +1,9 @@
 ## Checking out this repository
 We are using OpenWPM as a submodule, so after cloning this repository, cd into the directory and type `git submodule update --init OpenWPM/`
 
+You will then have to install OpenWPM locally (this will likely be hard to do on anything but Linux)
+To do this, cd into the OpenWPM directory and run both `install.sh` and `install-dev.sh`
+
 ## How to specify crawling behavior
 We support a limited range of crawling behaviors at the moment, but that means the instructions will be simple. 
 
