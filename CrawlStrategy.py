@@ -1,12 +1,10 @@
 from random import shuffle, random
 import datetime
-from selenium.common.exceptions import TimeoutException
-
 from OpenWPM.automation import TaskManager, CommandSequence
 import os, time
-from urlparse import urlparse, urljoin
 from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, \
     scroll_to_element, move_to_element, is_75percent_scrolled, scroll_percent
+from extractors import get_reddit_stories
 
 MAX_PAGES_PER_LANDING_PAGE = 10
 
@@ -159,25 +157,6 @@ class CrawlStrategy():
 
 
 if __name__ == "__main__":
-    def get_reddit_stories(webdriver):
-        location = webdriver.current_url
-        result = []
-        hrefs = set([])
-        anchors = webdriver.find_elements_by_tag_name('a')
-        for anchor in anchors:
-            href = anchor.get_attribute('href')
-            if not href:
-                continue
-            href = urljoin(location, href)
-            host = urlparse(href).hostname
-            if host.find('reddit') == -1 and host.find('bit.ly') == -1:
-                if href not in hrefs:
-                    #print href
-                    hrefs.add(href)
-                    result.append(anchor)
-        return result
-
-
     # let's do the news crawl
     crawl_dict = {
         'https://www.reddit.com/r/worldnews/': get_reddit_stories,
