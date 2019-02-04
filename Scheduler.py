@@ -33,19 +33,65 @@ def get_ycomb_stories(webdriver):
         result.append(anchor)
 
     return result
+
+def get_goldfish(webdriver):
+    location = webdriver.current_url
+    result = []
+    hrefs = set([])
+    anchors = webdriver.find_elements_by_tag_name('a')
+    for anchor in anchors:
+        href = anchor.get_attribute('href')
+        if not href:
+            continue
+        href = urljoin(location, href)
+        if 'article' not in href:
+            continue
+        host = urlparse(href).hostname
+        if href not in hrefs:
+            hrefs.add(href)
+            result.append(anchor)
+    print(hrefs)
+    return result
+
+def get_cfb(webdriver):
+    location = webdriver.current_url
+    result = []
+    hrefs = set([])
+    anchors = webdriver.find_elements_by_tag_name('a')
+    for anchor in anchors:
+        href = anchor.get_attribute('href')
+        if not href:
+            continue
+        href = urljoin(location, href)
+        if 'article' not in href:
+            continue
+        host = urlparse(href).hostname
+        if href not in hrefs:
+            hrefs.add(href)
+            result.append(anchor)
+    print(hrefs)
+    return result
+
 def setup_ycomb():
     crawl_strategies = []
     crawl_dict = {
         'https://news.ycombinator.com/': get_ycomb_stories
     }
-    time_restrictions = {
-        'crawl_interval': 1,
-        'time_of_day_min': '00:00:01',
-        'time_of_day_max': '23:59:59'
-    }
+
     cs = CrawlStrategy('ycombinator', [], crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
     return crawl_strategies
+
+def setup_nick_irl():
+    crawl_strategies = []
+    crawl_dict = {
+        'https://www.mtggoldfish.com/': get_goldfish,
+        'https://www.channelfireball.com/': get_cfb
+    }
+    cs = CrawlStrategy('mtg', [], crawl_dict)
+    crawl_strategies.append(cs)
+    return crawl_strategies
+
 
 def setup_barber5_reddit():
     crawl_strategies = []
@@ -81,7 +127,7 @@ def setup_barber5_reddit():
     return crawl_strategies
 
 if __name__ == "__main__":
-    crawl_strategies = setup_ycomb()
+    crawl_strategies = setup_nick_irl()
     while True:
         for cs in crawl_strategies:
             if cs.can_crawl():
