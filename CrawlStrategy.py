@@ -139,7 +139,7 @@ class CrawlStrategy():
         for site in self.crawl_pages:
             command_sequence = CommandSequence.CommandSequence(site)
             command_sequence.get(sleep=3, timeout=100)
-            fixed_custom_function = self.fixed_custom_function()
+            #fixed_custom_function = self.fixed_custom_function()
             command_sequence.run_custom_function(fixed_custom_function, (), timeout=300)
             command_sequence.dump_profile_cookies(100)
             manager.execute_command_sequence(command_sequence, index='**')
@@ -178,4 +178,3 @@ if __name__ == "__main__":
     ]
     cs = CrawlStrategy("substantive_news", fixed_crawls, crawl_dict)
     cs.crawl()
-
