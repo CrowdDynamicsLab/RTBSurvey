@@ -1,4 +1,4 @@
-from extractors import get_reddit_stories
+from extractors import get_reddit_wrapper
 from CrawlStrategy import CrawlStrategy
 
 def setup_barber5_reddit():
@@ -6,8 +6,8 @@ def setup_barber5_reddit():
 
     # let's do the news crawl
     crawl_dict = {
-        'https://www.reddit.com/r/worldnews/': get_reddit_stories,
-        'https://www.reddit.com/r/news': get_reddit_stories
+        'https://www.reddit.com/r/worldnews/': get_reddit_wrapper(),
+        'https://www.reddit.com/r/news': get_reddit_wrapper()
     }
 
     cs = CrawlStrategy("news", [], crawl_dict) # using default time of day and interval restrictions
@@ -15,9 +15,9 @@ def setup_barber5_reddit():
 
     # and the "substantive" news crawl
     crawl_dict = {
-        "https://www.reddit.com/r/InDepthStories": get_reddit_stories,
-        "https://www.reddit.com/r/geopolitics/": get_reddit_stories,
-        "https://www.reddit.com/r/foreignpolicy/": get_reddit_stories
+        "https://www.reddit.com/r/InDepthStories": get_reddit_wrapper(),
+        "https://www.reddit.com/r/geopolitics/": get_reddit_wrapper(),
+        "https://www.reddit.com/r/foreignpolicy/": get_reddit_wrapper(3)
     }
     fixed_crawls = [
         'https://www.economist.com/',
@@ -29,4 +29,29 @@ def setup_barber5_reddit():
     }
     cs = CrawlStrategy("substantive_news", fixed_crawls, crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
+
+    crawl_dict = {
+        'https://www.reddit.com/r/malefashionadvice/': get_reddit_wrapper(),
+        'https://www.reddit.com/r/Sneakers/': get_reddit_wrapper(),
+        'https://www.reddit.com/r/news': get_reddit_wrapper(5)
+    }
+    cs = CrawlStrategy("malefashion", [], crawl_dict)
+    crawl_strategies.append(cs)
+
+    crawl_dict = {
+        'https://www.reddit.com/r/TwoXChromosomes/': get_reddit_wrapper(),
+        'https://www.reddit.com/r/news': get_reddit_wrapper(5)
+    }
+
+    cs = CrawlStrategy('twox', [], crawl_dict)
+    crawl_strategies.append(cs)
+
+    crawl_dict = {
+        'https://www.reddit.com/r/raisingKids': get_reddit_wrapper(),
+        'https://www.reddit.com/r/Newparents': get_reddit_wrapper(),
+        'https://www.reddit.com/r/news': get_reddit_wrapper(5)
+    }
+    cs = CrawlStrategy('parenting', [], crawl_dict)
+    crawl_strategies.append(cs)
+
     return crawl_strategies

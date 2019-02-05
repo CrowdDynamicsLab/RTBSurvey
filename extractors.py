@@ -1,4 +1,7 @@
 from urlparse import urlparse, urljoin
+import time
+from random import shuffle
+from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_to_bottom
 
 
 # The logic of CrawlSrategy.crawl() will visit a landing page, load it and then call the extractor function
@@ -8,20 +11,30 @@ from urlparse import urlparse, urljoin
 # You must return a list of WebElements which have an 'href' attribute
 # as the crawler will iterate through this list and construct a list of links to visit
 # by asking each of the WebElements returned by this function for the attribute href
-def get_reddit_stories(webdriver):
-    location = webdriver.current_url
-    result = []
-    hrefs = set([])
-    anchors = webdriver.find_elements_by_tag_name('a')
-    for anchor in anchors:
-        href = anchor.get_attribute('href')
-        if not href:
-            continue
-        href = urljoin(location, href)
-        host = urlparse(href).hostname
-        if host.find('reddit') == -1 and host.find('bit.ly') == -1:
-            if href not in hrefs:
-                # print href
-                hrefs.add(href)
-                result.append(anchor)
-    return result
+def get_reddit_wrapper(max_hrefs=10):
+    def get_reddit_stories(webdriver):
+        location = webdriver.current_url
+        scroll_to_bottom(webdriver)
+        time.sleep(3)
+        scroll_to_bottom(webdriver)
+        time.sleep(3)
+        result = []
+        hrefs = set([])
+        anchors = webdriver.find_elements_by_tag_name('a')
+        for anchor in anchors:
+            href = anchor.get_attribute('href')
+            if not href:
+                continue
+            href = urljoin(location, href)
+            host = urlparse(href).hostname
+            if host.find('reddit') == -1 and host.find('bit.ly') == -1 and host.find('redd.it') == -1 and host.find('imgur') == -1:
+                if href not in hrefs:
+                    # print href
+                    hrefs.add(href)
+                    result.append(anchor)
+
+        if len(result) > max_hrefs:
+            shuffle(result)
+            result = result[:max_hrefs]
+        return result
+    return get_reddit_stories
