@@ -12,6 +12,19 @@ from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_to_bot
 # as the crawler will iterate through this list and construct a list of links to visit
 # by asking each of the WebElements returned by this function for the attribute href
 
+def get_wsj_links(webdriver):
+    location = webdriver.current_url
+    result = []
+    hrefs = set([])
+    anchors = webdriver.find_elements_by_class_name('wsj-headline-link')
+    for anchor in anchors:
+        href = anchor.get_attribute('href')
+        if not href:
+            continue
+        hrefs.add(href)
+        result.append(anchor)
+
+    return result
 
 
 def get_ycomb_stories(webdriver):
