@@ -4,7 +4,7 @@ from barber5 import setup_barber5_reddit
 
 
 if __name__ == "__main__":
-    crawl_strategies = setup_nick_irl()
+    crawl_strategies = setup_barber5_reddit()
     while True:
         for cs in crawl_strategies:
             if cs.can_crawl():
