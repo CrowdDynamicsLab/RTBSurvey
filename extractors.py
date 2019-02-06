@@ -11,6 +11,62 @@ from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_to_bot
 # You must return a list of WebElements which have an 'href' attribute
 # as the crawler will iterate through this list and construct a list of links to visit
 # by asking each of the WebElements returned by this function for the attribute href
+
+
+
+def get_ycomb_stories(webdriver):
+    location = webdriver.current_url
+    result = []
+    hrefs = set([])
+    anchors = webdriver.find_elements_by_class_name('storylink')
+    for anchor in anchors[1:3]:
+        href = anchor.get_attribute('href')
+        if not href:
+            continue
+        hrefs.add(href)
+        #print(href)
+        result.append(anchor)
+
+    return result
+
+def get_goldfish(webdriver):
+    location = webdriver.current_url
+    result = []
+    hrefs = set([])
+    anchors = webdriver.find_elements_by_tag_name('a')
+    for anchor in anchors:
+        href = anchor.get_attribute('href')
+        if not href:
+            continue
+        href = urljoin(location, href)
+        if 'article' not in href:
+            continue
+        host = urlparse(href).hostname
+        if href not in hrefs:
+            hrefs.add(href)
+            result.append(anchor)
+    print(hrefs)
+    return result
+
+def get_cfb(webdriver):
+    location = webdriver.current_url
+    result = []
+    hrefs = set([])
+    anchors = webdriver.find_elements_by_tag_name('a')
+    for anchor in anchors:
+        href = anchor.get_attribute('href')
+        if not href:
+            continue
+        href = urljoin(location, href)
+        if 'article' not in href:
+            continue
+        host = urlparse(href).hostname
+        if href not in hrefs:
+            hrefs.add(href)
+            result.append(anchor)
+    print(hrefs)
+    return result
+
 def get_reddit_wrapper(max_hrefs=10):
     def get_reddit_stories(webdriver):
         location = webdriver.current_url
@@ -38,3 +94,4 @@ def get_reddit_wrapper(max_hrefs=10):
             result = result[:max_hrefs]
         return result
     return get_reddit_stories
+
