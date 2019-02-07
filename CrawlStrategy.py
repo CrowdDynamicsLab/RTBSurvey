@@ -7,6 +7,8 @@ from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, 
     is_60percent_scrolled, scroll_percent
 from extractors import get_reddit_wrapper
 import sqlite3
+from OpenWPM.automation.SocketInterface import clientsocket
+from OpenWPM.automation.utilities import db_utils
 
 CRAWL_DATA_PATH = 'crawl_data'
 
@@ -56,32 +58,68 @@ class CrawlStrategy():
         if now > max_dt:
             return False
         return True
+    def setup_visitdb(self, manager_params):
+        # following the create pattern in
+        # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/test/test_custom_function_command.py#L44
+        # see
+        # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/automation/DataAggregator/LocalAggregator.py#L92
+        # for implementation of this part of sock.send() parsing
+        sock = clientsocket()
+        sock.connect(*manager_params['aggregator_address'])
+        query = "CREATE TABLE IF NOT EXISTS crawl_visits (visit_id INTEGER PRIMARY KEY AUTOINCREMENT, crawl_id INTEGER NOT NULL, url TEXT NOT NULL)"
+        sock.send(("create_table", query))
+        sock.close()
+
+
+    def insert_visit(self, manager_params, crawl_id, url):
+        # following the insert pattern in
+        # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/test/test_custom_function_command.py#L52
+        # see
+        # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/automation/DataAggregator/LocalAggregator.py#L99
+        # for implementation of this part of sock.send() parsing
+        sock = clientsocket()
+        sock.connect(*manager_params['aggregator_address'])
+        query = ('crawl_visits', {
+            "crawl_id": crawl_id,
+            "url": url
+        })
+        sock.send(query)
+        sock.close()
+
+    def query_visits(self, manager_params, href):
+        query = "SELECT url FROM crawl_visits WHERE url='%s'" % href
+        query_result = db_utils.query_db(
+            manager_params['database_name'],
+            query,
+            as_tuple=True
+        )
+        return len(query_result) == 0
 
 
     def my_custom_function(self, landing_page, rule):
         def result(**kwargs):
-
             webdriver = kwargs['driver']
-            already_visited = set([])
+            manager_params = kwargs['manager_params']
+            crawl_id = kwargs['browser_params']['crawl_id']
+            self.setup_visitdb(manager_params)
             candidate_divs = rule(webdriver)
             valid_divs = []
             for cd in candidate_divs:
-                if cd.get_attribute("href") not in already_visited:
-                    try:
-                        db_connection = sqlite3.connect('{}/{}/crawl-data.sqlite'.format(CRAWL_DATA_PATH, self.profile_name))
-                        db_cursor = db_connection.cursor()
-                        db_cursor.execute("SELECT url from http_requests where url='%s'" % cd.get_attribute('href'))
-                        results = db_cursor.fetchall()
-                        print 'length of results for {} is {}'.format(cd.get_attribute('href'), len(results))
-                        if len(results) == 0:
-                            valid_divs.append(cd.get_attribute('href'))
-                        db_connection.close()
-                    except Exception as e:
-                        print "database likely doesn't exist yet"
-                        print traceback.format_exc()
+                href = cd.get_attribute('href')
+                try:
+                    if self.query_visits(manager_params, href):
+                        print 'can crawl: {}'.format(href)
+                        valid_divs.append(href)
+                    else:
+                        print 'cannot crawl (already visited): {}'.format(href)
+
+                except Exception as e:
+                    print "database likely doesn't exist yet"
+                    print traceback.format_exc()
             print 'got {} potential links'.format(len(valid_divs))
             shuffle(valid_divs)
             for href in valid_divs:
+                self.insert_visit(manager_params, crawl_id, href)
                 webdriver.get(href)
                 print 'loaded {}'.format(href)
 
