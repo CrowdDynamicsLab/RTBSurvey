@@ -1,14 +1,16 @@
+import traceback
 from random import shuffle, random
 import datetime
-from selenium.common.exceptions import TimeoutException
-
 from OpenWPM.automation import TaskManager, CommandSequence
 import os, time
-from urlparse import urlparse, urljoin
 from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, \
-    scroll_to_element, move_to_element, is_75percent_scrolled, scroll_percent
+    is_60percent_scrolled, scroll_percent
+from extractors import get_reddit_wrapper
+import sqlite3
+from OpenWPM.automation.SocketInterface import clientsocket
+from OpenWPM.automation.utilities import db_utils
 
-MAX_PAGES_PER_LANDING_PAGE = 10
+CRAWL_DATA_PATH = 'crawl_data'
 
 class CrawlStrategy():
     # crawl_pages is just a list of urls to navigate to
@@ -56,48 +58,86 @@ class CrawlStrategy():
         if now > max_dt:
             return False
         return True
+    def setup_visitdb(self, manager_params):
+        # following the create pattern in
+        # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/test/test_custom_function_command.py#L44
+        # see
+        # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/automation/DataAggregator/LocalAggregator.py#L92
+        # for implementation of this part of sock.send() parsing
+        sock = clientsocket()
+        sock.connect(*manager_params['aggregator_address'])
+        query = "CREATE TABLE IF NOT EXISTS crawl_visits (visit_id INTEGER PRIMARY KEY AUTOINCREMENT, crawl_id INTEGER NOT NULL, url TEXT NOT NULL)"
+        sock.send(("create_table", query))
+        sock.close()
 
 
-    def my_custom_function(self, num_pages, landing_page, rule):
+    def insert_visit(self, manager_params, crawl_id, url):
+        # following the insert pattern in
+        # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/test/test_custom_function_command.py#L52
+        # see
+        # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/automation/DataAggregator/LocalAggregator.py#L99
+        # for implementation of this part of sock.send() parsing
+        sock = clientsocket()
+        sock.connect(*manager_params['aggregator_address'])
+        query = ('crawl_visits', {
+            "crawl_id": crawl_id,
+            "url": url
+        })
+        sock.send(query)
+        sock.close()
+
+    def query_visits(self, manager_params, href):
+        query = "SELECT url FROM crawl_visits WHERE url='%s'" % href
+        query_result = db_utils.query_db(
+            manager_params['database_name'],
+            query,
+            as_tuple=True
+        )
+        return len(query_result) == 0
+
+
+    def my_custom_function(self, landing_page, rule):
         def result(**kwargs):
             webdriver = kwargs['driver']
-            already_visited = set([])
-            for i in range(num_pages):
-                candidate_divs = rule(webdriver)
-                valid_divs = []
-                for cd in candidate_divs:
-                    if cd.get_attribute("href") not in already_visited:
-                        valid_divs.append(cd)
-                shuffle(valid_divs)
-                if len(valid_divs) == 0:
-                    print 'WARNING: Tried to access div index {} but there were only {} valid_divs'.format(i, len(valid_divs))
-                else:
-                    href = valid_divs[0].get_attribute("href")
-                    scroll_to_element(webdriver, valid_divs[0])
-                    time.sleep(1)
-                    move_to_element(webdriver, valid_divs[0])
+            manager_params = kwargs['manager_params']
+            crawl_id = kwargs['browser_params']['crawl_id']
+            self.setup_visitdb(manager_params)
+            candidate_divs = rule(webdriver)
+            valid_divs = []
+            for cd in candidate_divs:
+                href = cd.get_attribute('href')
+                try:
+                    if self.query_visits(manager_params, href):
+                        print 'can crawl: {}'.format(href)
+                        valid_divs.append(href)
+                    else:
+                        print 'cannot crawl (already visited): {}'.format(href)
 
-                    already_visited.add(href)
-                    webdriver.get(href)
-                    print 'loaded {}'.format(href)
+                except Exception as e:
+                    print "database likely doesn't exist yet"
+                    print traceback.format_exc()
+            print 'got {} potential links'.format(len(valid_divs))
+            shuffle(valid_divs)
+            for href in valid_divs:
+                self.insert_visit(manager_params, crawl_id, href)
+                webdriver.get(href)
+                print 'loaded {}'.format(href)
 
-                    num_scrolls = 0
-                    current_scroll_percent = -1
-                    while not is_75percent_scrolled(webdriver) and num_scrolls < 40:
-                        scroll_down(webdriver)
-                        last_scroll_percent = current_scroll_percent
-                        current_scroll_percent = scroll_percent(webdriver)
-                        print 'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent)
-                        if current_scroll_percent <= last_scroll_percent:
-                            break
-                        num_scrolls += 1
-                        print 'num_scrolls: {}'.format(num_scrolls)
-                        time.sleep(2*random())
-                    print 'done scrolling'
-
-                    webdriver.get(landing_page)
-
-                    time.sleep(3)
+                num_scrolls = 0
+                current_scroll_percent = -1
+                while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
+                    scroll_down(webdriver)
+                    last_scroll_percent = current_scroll_percent
+                    current_scroll_percent = scroll_percent(webdriver)
+                    print 'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent)
+                    if current_scroll_percent <= last_scroll_percent:
+                        break
+                    num_scrolls += 1
+                    print 'num_scrolls: {}'.format(num_scrolls)
+                    time.sleep(2*random())
+                print 'done scrolling'
+                webdriver.get(landing_page)
+                time.sleep(3)
         return result
 
 
@@ -106,7 +146,7 @@ class CrawlStrategy():
             webdriver = kwargs['driver']
             num_scrolls = 0
             current_scroll_percent = -1
-            while not is_75percent_scrolled(webdriver) and num_scrolls < 40:
+            while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
                 scroll_down(webdriver)
                 last_scroll_percent = current_scroll_percent
                 current_scroll_percent = scroll_percent(webdriver)
@@ -150,7 +190,7 @@ class CrawlStrategy():
         for lp, rule in self.landing_and_extraction.iteritems():
             command_sequence = CommandSequence.CommandSequence(lp)
             command_sequence.get(sleep=3, timeout=100)
-            my_function = self.my_custom_function(MAX_PAGES_PER_LANDING_PAGE, lp, rule)
+            my_function = self.my_custom_function(lp, rule)
             command_sequence.run_custom_function(my_function, (), timeout=2100)
             command_sequence.dump_profile_cookies(100)
             manager.execute_command_sequence(command_sequence, index='**')
@@ -159,38 +199,19 @@ class CrawlStrategy():
 
 
 if __name__ == "__main__":
-    def get_reddit_stories(webdriver):
-        location = webdriver.current_url
-        result = []
-        hrefs = set([])
-        anchors = webdriver.find_elements_by_tag_name('a')
-        for anchor in anchors:
-            href = anchor.get_attribute('href')
-            if not href:
-                continue
-            href = urljoin(location, href)
-            host = urlparse(href).hostname
-            if host.find('reddit') == -1 and host.find('bit.ly') == -1:
-                if href not in hrefs:
-                    #print href
-                    hrefs.add(href)
-                    result.append(anchor)
-        return result
-
-
     # let's do the news crawl
     crawl_dict = {
-        'https://www.reddit.com/r/worldnews/': get_reddit_stories,
-        'https://www.reddit.com/r/news': get_reddit_stories
+        'https://www.reddit.com/r/worldnews/': get_reddit_wrapper(),
+        'https://www.reddit.com/r/news': get_reddit_wrapper()
     }
     cs = CrawlStrategy("news", [], crawl_dict)
     cs.crawl()
 
     # and the "substantive" news crawl
     crawl_dict = {
-        "https://www.reddit.com/r/InDepthStories": get_reddit_stories,
-        "https://www.reddit.com/r/geopolitics/": get_reddit_stories,
-        "https://www.reddit.com/r/foreignpolicy/": get_reddit_stories
+        "https://www.reddit.com/r/InDepthStories": get_reddit_wrapper(5),
+        "https://www.reddit.com/r/geopolitics/": get_reddit_wrapper(5),
+        "https://www.reddit.com/r/foreignpolicy/": get_reddit_wrapper(3)
     }
     fixed_crawls = [
         'https://www.economist.com/',
@@ -199,4 +220,3 @@ if __name__ == "__main__":
     ]
     cs = CrawlStrategy("substantive_news", fixed_crawls, crawl_dict)
     cs.crawl()
-
