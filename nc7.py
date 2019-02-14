@@ -7,7 +7,7 @@ def setup_ycomb():
         'https://news.ycombinator.com/': get_ycomb_stories
     }
 
-    cs = CrawlStrategy('ycombinator', [], crawl_dict, time_restrictions)
+    cs = CrawlStrategy('ycombinator', [], crawl_dict)
     crawl_strategies.append(cs)
     return crawl_strategies
 

@@ -32,7 +32,7 @@ def get_ycomb_stories(webdriver):
     result = []
     hrefs = set([])
     anchors = webdriver.find_elements_by_class_name('storylink')
-    for anchor in anchors[1:3]:
+    for anchor in anchors:
         href = anchor.get_attribute('href')
         if not href:
             continue
