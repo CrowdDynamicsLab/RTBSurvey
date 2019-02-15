@@ -1,12 +1,14 @@
+import traceback
 from random import shuffle, random
 import datetime
 from OpenWPM.automation import TaskManager, CommandSequence
 import os, time
 from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, \
-    scroll_to_element, move_to_element, is_75percent_scrolled, scroll_percent
-from extractors import get_reddit_stories
+    is_60percent_scrolled, scroll_percent
+from extractors import get_reddit_wrapper
+import sqlite3
 
-MAX_PAGES_PER_LANDING_PAGE = 10
+CRAWL_DATA_PATH = 'crawl_data'
 
 class CrawlStrategy():
     # crawl_pages is just a list of urls to navigate to
@@ -56,46 +58,48 @@ class CrawlStrategy():
         return True
 
 
-    def my_custom_function(self, num_pages, landing_page, rule):
+    def my_custom_function(self, landing_page, rule):
         def result(**kwargs):
+
             webdriver = kwargs['driver']
             already_visited = set([])
-            for i in range(num_pages):
-                candidate_divs = rule(webdriver)
-                valid_divs = []
-                for cd in candidate_divs:
-                    if cd.get_attribute("href") not in already_visited:
-                        valid_divs.append(cd)
-                shuffle(valid_divs)
-                if len(valid_divs) == 0:
-                    print 'WARNING: Tried to access div index {} but there were only {} valid_divs'.format(i, len(valid_divs))
-                else:
-                    href = valid_divs[0].get_attribute("href")
-                    scroll_to_element(webdriver, valid_divs[0])
-                    time.sleep(1)
-                    move_to_element(webdriver, valid_divs[0])
+            candidate_divs = rule(webdriver)
+            valid_divs = []
+            for cd in candidate_divs:
+                if cd.get_attribute("href") not in already_visited:
+                    try:
+                        db_connection = sqlite3.connect('{}/{}/crawl-data.sqlite'.format(CRAWL_DATA_PATH, self.profile_name))
+                        db_cursor = db_connection.cursor()
+                        db_cursor.execute("SELECT url from http_requests where url='%s'" % cd.get_attribute('href'))
+                        results = db_cursor.fetchall()
+                        print 'length of results for {} is {}'.format(cd.get_attribute('href'), len(results))
+                        if len(results) == 0:
+                            valid_divs.append(cd.get_attribute('href'))
+                        db_connection.close()
+                    except Exception as e:
+                        print "database likely doesn't exist yet"
+                        print traceback.format_exc()
+            print 'got {} potential links'.format(len(valid_divs))
+            shuffle(valid_divs)
+            for href in valid_divs:
+                webdriver.get(href)
+                print 'loaded {}'.format(href)
 
-                    already_visited.add(href)
-                    webdriver.get(href)
-                    print 'loaded {}'.format(href)
-
-                    num_scrolls = 0
-                    current_scroll_percent = -1
-                    while not is_75percent_scrolled(webdriver) and num_scrolls < 40:
-                        scroll_down(webdriver)
-                        last_scroll_percent = current_scroll_percent
-                        current_scroll_percent = scroll_percent(webdriver)
-                        print 'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent)
-                        if current_scroll_percent <= last_scroll_percent:
-                            break
-                        num_scrolls += 1
-                        print 'num_scrolls: {}'.format(num_scrolls)
-                        time.sleep(2*random())
-                    print 'done scrolling'
-
-                    webdriver.get(landing_page)
-
-                    time.sleep(3)
+                num_scrolls = 0
+                current_scroll_percent = -1
+                while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
+                    scroll_down(webdriver)
+                    last_scroll_percent = current_scroll_percent
+                    current_scroll_percent = scroll_percent(webdriver)
+                    print 'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent)
+                    if current_scroll_percent <= last_scroll_percent:
+                        break
+                    num_scrolls += 1
+                    print 'num_scrolls: {}'.format(num_scrolls)
+                    time.sleep(2*random())
+                print 'done scrolling'
+                webdriver.get(landing_page)
+                time.sleep(3)
         return result
 
 
@@ -104,7 +108,7 @@ class CrawlStrategy():
             webdriver = kwargs['driver']
             num_scrolls = 0
             current_scroll_percent = -1
-            while not is_75percent_scrolled(webdriver) and num_scrolls < 40:
+            while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
                 scroll_down(webdriver)
                 last_scroll_percent = current_scroll_percent
                 current_scroll_percent = scroll_percent(webdriver)
@@ -139,7 +143,7 @@ class CrawlStrategy():
         for site in self.crawl_pages:
             command_sequence = CommandSequence.CommandSequence(site)
             command_sequence.get(sleep=3, timeout=100)
-            #fixed_custom_function = self.fixed_custom_function()
+            fixed_custom_function = self.fixed_custom_function()
             command_sequence.run_custom_function(fixed_custom_function, (), timeout=300)
             command_sequence.dump_profile_cookies(100)
             manager.execute_command_sequence(command_sequence, index='**')
@@ -148,7 +152,7 @@ class CrawlStrategy():
         for lp, rule in self.landing_and_extraction.iteritems():
             command_sequence = CommandSequence.CommandSequence(lp)
             command_sequence.get(sleep=3, timeout=100)
-            my_function = self.my_custom_function(MAX_PAGES_PER_LANDING_PAGE, lp, rule)
+            my_function = self.my_custom_function(lp, rule)
             command_sequence.run_custom_function(my_function, (), timeout=2100)
             command_sequence.dump_profile_cookies(100)
             manager.execute_command_sequence(command_sequence, index='**')
@@ -159,17 +163,17 @@ class CrawlStrategy():
 if __name__ == "__main__":
     # let's do the news crawl
     crawl_dict = {
-        'https://www.reddit.com/r/worldnews/': get_reddit_stories,
-        'https://www.reddit.com/r/news': get_reddit_stories
+        'https://www.reddit.com/r/worldnews/': get_reddit_wrapper(),
+        'https://www.reddit.com/r/news': get_reddit_wrapper()
     }
     cs = CrawlStrategy("news", [], crawl_dict)
     cs.crawl()
 
     # and the "substantive" news crawl
     crawl_dict = {
-        "https://www.reddit.com/r/InDepthStories": get_reddit_stories,
-        "https://www.reddit.com/r/geopolitics/": get_reddit_stories,
-        "https://www.reddit.com/r/foreignpolicy/": get_reddit_stories
+        "https://www.reddit.com/r/InDepthStories": get_reddit_wrapper(5),
+        "https://www.reddit.com/r/geopolitics/": get_reddit_wrapper(5),
+        "https://www.reddit.com/r/foreignpolicy/": get_reddit_wrapper(3)
     }
     fixed_crawls = [
         'https://www.economist.com/',
