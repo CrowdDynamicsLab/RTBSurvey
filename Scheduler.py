@@ -1,10 +1,9 @@
 import time, datetime
 from barber5 import setup_barber5_reddit
-
-
+import nc7
 
 if __name__ == "__main__":
-    crawl_strategies = setup_nick_irl()
+    crawl_strategies = nc7.setup_liberal()
     while True:
         for cs in crawl_strategies:
             if cs.can_crawl():
