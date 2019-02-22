@@ -12,23 +12,34 @@ from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_to_bot
 # as the crawler will iterate through this list and construct a list of links to visit
 # by asking each of the WebElements returned by this function for the attribute href
 
+
 def get_reddit_stories(webdriver):
     location = webdriver.current_url
     result = []
     hrefs = set([])
     anchors = webdriver.find_elements_by_tag_name('a')
+    href = urljoin(location, href)
+    host = urlparse(href).hostname
+    if host.find('reddit') == -1 and host.find('bit.ly') == -1 and host.find('twitter') == -1:
+        if href not in hrefs:
+            # print href
+            hrefs.add(href)
+            result.append(anchor)
+    return result
+
+def get_wsj_links(webdriver):
+    location = webdriver.current_url
+    result = []
+    hrefs = set([])
+    anchors = webdriver.find_elements_by_class_name('wsj-headline-link')
+
     for anchor in anchors:
         href = anchor.get_attribute('href')
         if not href:
             continue
-        href = urljoin(location, href)
-        host = urlparse(href).hostname
-        if host.find('reddit') == -1 and host.find('bit.ly') == -1 and host.find('twitter') == -1:
-            if href not in hrefs:
-                # print href
-                hrefs.add(href)
-                result.append(anchor)
-    print(hrefs)
+
+        hrefs.add(href)
+        result.append(anchor)
     return result
 
 
@@ -37,7 +48,7 @@ def get_ycomb_stories(webdriver):
     result = []
     hrefs = set([])
     anchors = webdriver.find_elements_by_class_name('storylink')
-    for anchor in anchors[1:3]:
+    for anchor in anchors:
         href = anchor.get_attribute('href')
         if not href:
             continue
