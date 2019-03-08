@@ -71,13 +71,19 @@ def setup_conservative():
     crawl_strategies = []
 
     crawl_dict = {
-        "https://www.breitbart.com": ex.get_breitbart_articles,
+        "https://www.breitbart.com": ex.get_ac_articles,
         "https://www.theamericanconservative.com": ex.get_ac_articles,
-        "http://thefederalist.com": ex.get_fed_artcles,
+        "http://thefederalist.com": ex.get_ac_articles,
         "https://www.reddit.com/r/The_Donald/": ex.get_reddit_stories
     }
 
-    cs = CrawlStrategy('conservative', [], crawl_dict)
+    fixed_crawls = [
+        'https://vox.com',
+        'https://www.economist.com/',
+        'https://www.foreignaffairs.com/'
+    ]
+
+    cs = CrawlStrategy('conservative', fixed_crawls, crawl_dict, {'crawl_interval':1})
     crawl_strategies.append(cs)
     return crawl_strategies
 

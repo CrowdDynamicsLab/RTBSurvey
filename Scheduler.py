@@ -16,10 +16,7 @@ from nc7 import setup_nick_irl, setup_ycomb
 
 if __name__ == "__main__":
     crawl_strategies = []
-    crawl_strategies.extend(setup_ycomb())
-    crawl_strategies.extend(setup_barber5_reddit())
-    crawl_strategies.extend(setup_nick_irl())
-    crawl_strategies.extend(setup_gvs2())
+    crawl_strategies.extend(nc7.setup_conservative())
     shuffle(crawl_strategies)
 
     while True:
@@ -27,5 +24,4 @@ if __name__ == "__main__":
             if cs.can_crawl():
                 print '{} strategy {} is allowed to crawl, doing so now'.format(datetime.datetime.now().isoformat(' '), cs.profile_name)
                 cs.crawl()
-        time.sleep(15*60)
-
+        time.sleep(60)
