@@ -85,7 +85,7 @@ def get_str_val(response, var_name, str_offset):
         val = -1
         while True:
             val_string = response[val_start:(val_start+i)]
-            if val_string.replace(' ', '').isalnum():
+            if val_string.replace(' ', '').isalnum() or val_string.replace(' ', '')==':':
                 val = val_string
                 i+=1
                 continue
@@ -98,7 +98,6 @@ def get_str_val(response, var_name, str_offset):
 #val_offset is number of characters to skip after identifier for numeric values; in the case of cygnus, there's a ':' character so offset =1
 #str_offset is number of characters to skip for non-numeric values; in the case of cygnus, there's ':/"' so I set it to 3.
 def parse_response(row, response, price_var = '/"price/"', cid_var = '/"cid/"' , dim_vars = ['/"w/"','/"h/"'], adname_var = '/"advbrand/"', adid_var = '/"advbrandid/"', val_offset = 1, str_offset=3):
-
     prices = get_num_val(response, price_var, val_offset)
     cids = get_str_val(response, cid_var, str_offset)
     w = get_num_val(response, dim_vars[0], val_offset)
@@ -106,11 +105,30 @@ def parse_response(row, response, price_var = '/"price/"', cid_var = '/"cid/"' ,
     dims = [(w[i],h[i]) for i in range(0, len(w))]
     adids = get_num_val(response, adid_var, val_offset)
     adnames = get_str_val(response, adname_var, str_offset)
-
     bids = []
 
+
     for i in range(len(prices)):
-        bids.append(Bid(prices[i], cids[i], dims[i], adids[i],adnames[i]))
+        if(len(adnames)==0):
+            bids.append(Bid(prices[i], cids[i], dims[i], adids[i],''))
+
+
+    return (Auction(datetime=row[12], site=row[5], bids = bids))
+
+def parse_response_rubicon(row, response, price_var = '/"price/"', cid_var = '/"cid/"' , dim_vars = ['/"w/"','/"h/"'], adname_var = '/"advbrand/"', adid_var = '/"advbrandid/"', val_offset = 1, str_offset=3):
+    prices = get_num_val(response, price_var, val_offset)
+    cids = get_str_val(response, cid_var, str_offset)
+    w = get_num_val(response, dim_vars[0], val_offset)
+    h = get_num_val(response, dim_vars[1], val_offset)
+    dims = [(w[i],h[i]) for i in range(0, len(w))]
+    adids = get_str_val(response, adid_var, str_offset)
+    adnames = get_str_val(response, adname_var, str_offset)
+    bids = []
+
+
+    for i in range(len(prices)):
+        if(len(adnames)==0):
+            bids.append(Bid(prices[i], cids[i], dims[i], adids[i],''))
 
 
     return (Auction(datetime=row[12], site=row[5], bids = bids))
