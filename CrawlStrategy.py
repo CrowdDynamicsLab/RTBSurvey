@@ -149,6 +149,7 @@ class CrawlStrategy():
             webdriver = kwargs['driver']
             num_scrolls = 0
             current_scroll_percent = -1
+            '''
             while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
                 scroll_down(webdriver)
                 last_scroll_percent = current_scroll_percent
@@ -159,6 +160,8 @@ class CrawlStrategy():
                 num_scrolls += 1
                 print 'num_scrolls: {}'.format(num_scrolls)
                 time.sleep(2 * random())
+            '''
+            time.sleep(2 * random())
             print 'done scrolling'
         return result
 
