@@ -166,6 +166,7 @@ class CrawlStrategy():
         browser_params[0]['http_instrument'] = True
         browser_params[0]['cookie_instrument'] = True
         browser_params[0]['save_json'] = True
+        browser_params[0]['headless'] = True
         # ensures profile is saved
         browser_params[0]['profile_archive_dir'] = 'profiles/{}/'.format(self.profile_name)
         # logging
