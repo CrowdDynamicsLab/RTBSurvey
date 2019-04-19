@@ -18,3 +18,7 @@ To specify landing page and derivation, you need to define a function that takes
 Finally, if you want the crawl to have specific time of day or time between crawls restrictions you can specify those. We have sensible defaults in place if not. This dictionary should have a key for `crawl_interval` with an integer value corresponding to the minimum number of minutes between crawls, a key for `time_of_day_min` and a string like `00:10:40` as the value which is the minimum time of day where crawling is allowed, likewise a key can be specified for `time_of_day_max`. This dictionary or nothing in the case that we don't wan to specify restrictions beyond the default is passed as the fourth argument to the constructor. 
 
 [Here](https://github.com/CrowdDynamicsLab/RTBSurvey/blob/0f47f7b489a41e0b8c2c4d9640633f8c8ab627ae/Scheduler.py#L35) is a fully working example that creates a profile called `substantive_news` which visits 3 fixed pages and uses 3 subreddits as landing pages. It can only crawl between 8 and 10pm and won't crawl if this profile has crawled in the last 13 hours.
+
+
+## Rebuilding the firefox extension
+If this ever becomes necessary, the following should do it first `cd openWPM/automation/Extension'` and then type `jpm xpi`
