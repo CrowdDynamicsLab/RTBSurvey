@@ -1,5 +1,6 @@
 import re
-
+import time
+import numpy as np
 class Bid:
 
     auction_id = -1
@@ -36,21 +37,47 @@ class Auction:
         self.ad_unit = ad_unit
         self.bids = bids
 
-    def add_bid(b):
-        bids.append(b)
+    def add_bid(self, b):
+        self.bids.append(b)
 
-    def get_winning_bid():
+    def get_winning_bid(self):
         max = -1
         i = -1
-        for bid in bids:
-            if bid.cpm > max:
+        for bid in self.bids:
+            if bid.price > max:
                 i = bid
-                max = bid.cpm
+                max = bid.price
 
         return bid
 
+    def get_avg_bid(self):
+        sum =0
+        num=0
+        if len(self.bids )==0:
+            return -1
+        for bid in self.bids:
+            sum+=bid.price
+            num+=1
+
+        return sum/num
+
     def __str__(self):
         return str([self.auction_id, self.datetime, self.site, self.ad_unit, self.bids])
+
+    def __repr__(self):
+        return str([self.auction_id, self.datetime, self.site, self.ad_unit, self.bids])
+
+    def __lt__(self, other):
+        return self.datetime<other.datetime
+
+def merge_auctions(a_list):
+    bids = []
+    for auction in a_list:
+        bids  = bids+auction.bids
+
+    a_new = Auction(-1, a_list[0].datetime, a_list[0].site, -1, bids)
+    return a_new
+
 
 def is_num(n):
     try:
@@ -109,8 +136,9 @@ def parse_response(row, response, price_var = '/"price/"', cid_var = '/"cid/"' ,
 
     bids = []
 
-    for i in range(len(prices)):
+
+    for i in range(min(len(prices), len(cids), len(w), len(h), len(adids), len(adnames))):
         bids.append(Bid(prices[i], cids[i], dims[i], adids[i],adnames[i]))
 
-
-    return (Auction(datetime=row[12], site=row[5], bids = bids))
+    t=time.strptime(row[1].replace("-",""), "%Y%m%dT%H:%M:%S.%fZ")
+    return (Auction(datetime=t, site=row[2], bids = bids))
