@@ -1,8 +1,8 @@
 import re
 import time
-import numpy as np
-class Bid:
 
+
+class Bid:
     auction_id = -1
     price = -1
     creative = None
@@ -22,8 +22,9 @@ class Bid:
 
     def __repr__(self):
         return str([self.auction_id, self.price, self.creative, self.dim, self.ad_id, self.ad_name])
-class Auction:
 
+
+class Auction:
     auction_id = -1
     datetime = None
     site = ''

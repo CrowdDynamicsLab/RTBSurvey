@@ -13,19 +13,6 @@ from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_to_bot
 # by asking each of the WebElements returned by this function for the attribute href
 
 
-def get_reddit_stories(webdriver):
-    location = webdriver.current_url
-    result = []
-    hrefs = set([])
-    anchors = webdriver.find_elements_by_tag_name('a')
-    href = urljoin(location, href)
-    host = urlparse(href).hostname
-    if host.find('reddit') == -1 and host.find('bit.ly') == -1 and host.find('twitter') == -1:
-        if href not in hrefs:
-            # print href
-            hrefs.add(href)
-            result.append(anchor)
-    return result
 
 def get_wsj_links(webdriver):
     location = webdriver.current_url
@@ -339,9 +326,13 @@ def get_cookingnyt(webdriver):
     except:
         return result
 
-def get_reddit_wrapper(max_hrefs=10):
+def get_reddit_wrapper(max_hrefs=15):
     def get_reddit_stories(webdriver):
         location = webdriver.current_url
+        scroll_to_bottom(webdriver)
+        time.sleep(3)
+        scroll_to_bottom(webdriver)
+        time.sleep(3)
         scroll_to_bottom(webdriver)
         time.sleep(3)
         scroll_to_bottom(webdriver)
@@ -355,7 +346,7 @@ def get_reddit_wrapper(max_hrefs=10):
                 continue
             href = urljoin(location, href)
             host = urlparse(href).hostname
-            if host.find('reddit') == -1 and host.find('bit.ly') == -1 and host.find('redd.it') == -1 and host.find('imgur') == -1:
+            if host and host.find('reddit') == -1 and host.find('bit.ly') == -1 and host.find('redd.it') == -1 and host.find('imgur') == -1:
                 if href not in hrefs:
                     # print href
                     hrefs.add(href)

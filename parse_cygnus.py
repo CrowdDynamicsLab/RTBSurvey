@@ -5,6 +5,7 @@ import re
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+
 def create_connection(db_file):
     try:
         conn = sqlite3.connect(db_file)

@@ -6,11 +6,13 @@ import os, time
 from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, \
     is_60percent_scrolled, scroll_percent
 from extractors import get_reddit_wrapper
-import sqlite3
 from OpenWPM.automation.SocketInterface import clientsocket
 from OpenWPM.automation.utilities import db_utils
 
 CRAWL_DATA_PATH = 'crawl_data'
+
+IGNORE_URLS = ['imgur.com', 'youtu.be', 'youtube.com', 'giphy.com', 'twitter.com', 't.co', 'reddit.com', 'bit.ly',
+               'redd.it', 'instagram.com']
 
 class CrawlStrategy():
     # crawl_pages is just a list of urls to navigate to
@@ -69,6 +71,7 @@ class CrawlStrategy():
         query = "CREATE TABLE IF NOT EXISTS crawl_visits (visit_id INTEGER PRIMARY KEY AUTOINCREMENT, crawl_id INTEGER NOT NULL, url TEXT NOT NULL)"
         sock.send(("create_table", query))
         sock.close()
+        time.sleep(3)
 
 
     def insert_visit(self, manager_params, crawl_id, url):
@@ -86,7 +89,11 @@ class CrawlStrategy():
         sock.send(query)
         sock.close()
 
+
     def query_visits(self, manager_params, href):
+        for bad in IGNORE_URLS:
+            if href.find(bad) != -1:
+                return False
         query = "SELECT url FROM crawl_visits WHERE url='%s'" % href
         query_result = db_utils.query_db(
             manager_params['database_name'],
@@ -111,7 +118,7 @@ class CrawlStrategy():
                         print 'can crawl: {}'.format(href)
                         valid_divs.append(href)
                     else:
-                        print 'cannot crawl (already visited): {}'.format(href)
+                        print 'cannot crawl (already visited or on blacklist): {}'.format(href)
 
                 except Exception as e:
                     print "database likely doesn't exist yet"
@@ -125,7 +132,7 @@ class CrawlStrategy():
 
                 num_scrolls = 0
                 current_scroll_percent = -1
-                '''
+
                 while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
                     scroll_down(webdriver)
                     last_scroll_percent = current_scroll_percent
@@ -136,7 +143,7 @@ class CrawlStrategy():
                     num_scrolls += 1
                     print 'num_scrolls: {}'.format(num_scrolls)
                     time.sleep(2*random())
-                '''
+
                 time.sleep(2 * random())
                 print 'done scrolling'
                 webdriver.get(landing_page)
@@ -149,7 +156,7 @@ class CrawlStrategy():
             webdriver = kwargs['driver']
             num_scrolls = 0
             current_scroll_percent = -1
-            '''
+
             while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
                 scroll_down(webdriver)
                 last_scroll_percent = current_scroll_percent
@@ -160,7 +167,7 @@ class CrawlStrategy():
                 num_scrolls += 1
                 print 'num_scrolls: {}'.format(num_scrolls)
                 time.sleep(2 * random())
-            '''
+
             time.sleep(2 * random())
             print 'done scrolling'
         return result
