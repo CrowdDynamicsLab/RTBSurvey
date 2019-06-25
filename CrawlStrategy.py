@@ -146,7 +146,12 @@ class CrawlStrategy():
 
                 time.sleep(2 * random())
                 print 'done scrolling'
-                webdriver.get(landing_page)
+                try:
+                    webdriver.get(landing_page)
+                except Exception as e:
+                    print 'error getting {}'.format(landing_page)
+                    print traceback.format_exc()
+
                 time.sleep(3)
         return result
 
