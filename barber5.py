@@ -5,9 +5,7 @@ def setup_barber5_reddit():
     crawl_strategies = []
 
     time_restrictions = {
-        'crawl_interval': 720,
-        'time_of_day_min': '09:00:00',
-        'time_of_day_max': '22:30:00'
+        'crawl_interval': 720        
     }
 
     # let's do the news crawl
@@ -16,7 +14,7 @@ def setup_barber5_reddit():
         'https://www.reddit.com/r/news': get_reddit_wrapper()
     }
 
-    cs = CrawlStrategy("news", [], crawl_dict)
+    cs = CrawlStrategy("news", [], crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
 
     # and the "substantive" news crawl
@@ -31,7 +29,7 @@ def setup_barber5_reddit():
         'https://monocle.com/'
     ]
 
-    cs = CrawlStrategy("substantive_news", fixed_crawls, crawl_dict)
+    cs = CrawlStrategy("substantive_news", fixed_crawls, crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
 
     crawl_dict = {
@@ -39,7 +37,7 @@ def setup_barber5_reddit():
         'https://www.reddit.com/r/Sneakers/': get_reddit_wrapper(),
         'https://www.reddit.com/r/news': get_reddit_wrapper(5)
     }
-    cs = CrawlStrategy("malefashion", [], crawl_dict)
+    cs = CrawlStrategy("malefashion", [], crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
 
     crawl_dict = {
@@ -47,7 +45,7 @@ def setup_barber5_reddit():
         'https://www.reddit.com/r/news': get_reddit_wrapper(5)
     }
 
-    cs = CrawlStrategy('twox', [], crawl_dict)
+    cs = CrawlStrategy('twox', [], crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
 
     crawl_dict = {
@@ -55,7 +53,7 @@ def setup_barber5_reddit():
         'https://www.reddit.com/r/Newparents': get_reddit_wrapper(),
         'https://www.reddit.com/r/news': get_reddit_wrapper(5)
     }
-    cs = CrawlStrategy('parenting', [], crawl_dict)
+    cs = CrawlStrategy('parenting', [], crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
 
     return crawl_strategies
