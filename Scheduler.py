@@ -11,7 +11,5 @@ if __name__ == "__main__":
         for cs in crawl_strategies:
             if cs.can_crawl():
                 print '{} strategy {} is allowed to crawl, doing so now'.format(datetime.datetime.now().isoformat(' '), cs.profile_name)
-                cs.crawl()
-            else:
-            	print '{} strategy {} not allowed to crawl, sleeping'.format(datetime.datetime.now().isoformat(' '), cs.profile_name)
+                cs.crawl()            
         time.sleep(60)
