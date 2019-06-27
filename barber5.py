@@ -5,9 +5,7 @@ def setup_barber5_reddit():
     crawl_strategies = []
 
     time_restrictions = {
-        'crawl_interval': 720,
-        'time_of_day_min': '09:00:00',
-        'time_of_day_max': '22:30:00'
+        'crawl_interval': 720        
     }
 
     # let's do the news crawl
