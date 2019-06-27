@@ -2,9 +2,10 @@ import traceback
 from random import shuffle, random
 import datetime
 from OpenWPM.automation import TaskManager, CommandSequence
-import os, time
+import os
+import time
 from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, \
-    is_60percent_scrolled, scroll_percent
+    is_percent_scrolled, scroll_percent
 from extractors import get_reddit_wrapper
 from OpenWPM.automation.SocketInterface import clientsocket
 from OpenWPM.automation.utilities import db_utils
@@ -14,7 +15,8 @@ CRAWL_DATA_PATH = 'crawl_data'
 IGNORE_URLS = ['imgur.com', 'youtu.be', 'youtube.com', 'giphy.com', 'twitter.com', 't.co', 'reddit.com', 'bit.ly',
                'redd.it', 'instagram.com']
 
-class CrawlStrategy():
+
+class CrawlStrategy:
     # crawl_pages is just a list of urls to navigate to
     # landing and extraction is dictionary with keys corresponding to pages where more links can be visited
     # from according to the extraction rule in the value
@@ -45,22 +47,25 @@ class CrawlStrategy():
             self.crawl_interval = time_restrictions['crawl_interval']
         self.last_crawl = datetime.datetime(2000, 12, 1)
 
-
     # just return true for now, can use this for throttling and time of day logic
     def can_crawl(self):
         if datetime.datetime.now() < self.last_crawl + datetime.timedelta(minutes=self.crawl_interval):
             return False
         now = datetime.datetime.now()
         min_array = self.time_of_day_min.split(':')
-        min_dt = datetime.datetime(now.year, now.month, now.day, hour=int(min_array[0]), minute=int(min_array[1]), second=int(min_array[2]))
+        min_dt = datetime.datetime(now.year, now.month, now.day, hour=int(min_array[0]), minute=int(min_array[1]),
+                                   second=int(min_array[2]))
         if now < min_dt:
             return False
         max_array = self.time_of_day_max.split(':')
-        max_dt = datetime.datetime(now.year, now.month, now.day, hour=int(max_array[0]), minute=int(max_array[1]), second=int(max_array[2]))
+        max_dt = datetime.datetime(now.year, now.month, now.day, hour=int(max_array[0]), minute=int(max_array[1]),
+                                   second=int(max_array[2]))
         if now > max_dt:
             return False
         return True
-    def setup_visitdb(self, manager_params):
+
+    @staticmethod
+    def setup_visitdb(manager_params):
         # following the create pattern in
         # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/test/test_custom_function_command.py#L44
         # see
@@ -68,13 +73,14 @@ class CrawlStrategy():
         # for implementation of this part of sock.send() parsing
         sock = clientsocket()
         sock.connect(*manager_params['aggregator_address'])
-        query = "CREATE TABLE IF NOT EXISTS crawl_visits (visit_id INTEGER PRIMARY KEY AUTOINCREMENT, crawl_id INTEGER NOT NULL, url TEXT NOT NULL)"
+        query = "CREATE TABLE IF NOT EXISTS crawl_visits (visit_id INTEGER PRIMARY KEY AUTOINCREMENT, " \
+                "crawl_id INTEGER NOT NULL, url TEXT NOT NULL)"
         sock.send(("create_table", query))
         sock.close()
         time.sleep(3)
 
-
-    def insert_visit(self, manager_params, crawl_id, url):
+    @staticmethod
+    def insert_visit(manager_params, crawl_id, url):
         # following the insert pattern in
         # https://github.com/CrowdDynamicsLab/OpenWPM/blob/f731e6c35be0e0931941e2791cb003f7e09ec2fe/test/test_custom_function_command.py#L52
         # see
@@ -89,8 +95,8 @@ class CrawlStrategy():
         sock.send(query)
         sock.close()
 
-
-    def query_visits(self, manager_params, href):
+    @staticmethod
+    def query_visits(manager_params, href):
         for bad in IGNORE_URLS:
             if href.find(bad) != -1:
                 return False
@@ -101,7 +107,6 @@ class CrawlStrategy():
             as_tuple=True
         )
         return len(query_result) == 0
-
 
     def my_custom_function(self, landing_page, rule):
         def result(**kwargs):
@@ -129,11 +134,9 @@ class CrawlStrategy():
                 self.insert_visit(manager_params, crawl_id, href)
                 webdriver.get(href)
                 print 'loaded {}'.format(href)
-
                 num_scrolls = 0
                 current_scroll_percent = -1
-
-                while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
+                while not is_percent_scrolled(webdriver, .6) and num_scrolls < 40:
                     scroll_down(webdriver)
                     last_scroll_percent = current_scroll_percent
                     current_scroll_percent = scroll_percent(webdriver)
@@ -150,14 +153,13 @@ class CrawlStrategy():
                 time.sleep(3)
         return result
 
-
-    def fixed_custom_function(self):
+    @staticmethod
+    def fixed_custom_function():
         def result(**kwargs):
             webdriver = kwargs['driver']
             num_scrolls = 0
             current_scroll_percent = -1
-
-            while not is_60percent_scrolled(webdriver) and num_scrolls < 40:
+            while not is_percent_scrolled(webdriver, .6) and num_scrolls < 40:
                 scroll_down(webdriver)
                 last_scroll_percent = current_scroll_percent
                 current_scroll_percent = scroll_percent(webdriver)
@@ -177,9 +179,7 @@ class CrawlStrategy():
         # initialize crawler
         manager_params, browser_params = TaskManager.load_default_params()
         browser_params[0]['http_instrument'] = True
-        browser_params[0]['cookie_instrument'] = True
-        browser_params[0]['save_json'] = True
-        browser_params[0]['headless'] = True
+        browser_params[0]['save_all_content'] = True
         # ensures profile is saved
         browser_params[0]['headless']=True
         browser_params[0]['profile_archive_dir'] = 'profiles/{}/'.format(self.profile_name)
@@ -187,7 +187,8 @@ class CrawlStrategy():
         manager_params['data_directory'] = 'crawl_data/{}/'.format(self.profile_name)
         manager_params['log_directory'] = 'crawl_data/{}/'.format(self.profile_name)
         # load profile if need be
-        if os.path.isfile('profiles/{}/profile.tar'.format(self.profile_name)) or os.path.isfile('profiles/{}/profile.tar.gz'.format(self.profile_name)):
+        if os.path.isfile('profiles/{}/profile.tar'.format(self.profile_name)) or os.path.isfile(
+                'profiles/{}/profile.tar.gz'.format(self.profile_name)):
             browser_params[0]['profile_tar'] = 'profiles/{}/'.format(self.profile_name)
         manager = TaskManager.TaskManager(manager_params, browser_params)
 
@@ -198,7 +199,7 @@ class CrawlStrategy():
             command_sequence.get(sleep=3, timeout=100)
             fixed_custom_function = self.fixed_custom_function()
             command_sequence.run_custom_function(fixed_custom_function, (), timeout=300)
-            command_sequence.dump_profile_cookies(100)
+            command_sequence.dump_profile(100)
             manager.execute_command_sequence(command_sequence, index='**')
 
         # crawl our landing pages plus their children
@@ -207,7 +208,7 @@ class CrawlStrategy():
             command_sequence.get(sleep=3, timeout=100)
             my_function = self.my_custom_function(lp, rule)
             command_sequence.run_custom_function(my_function, (), timeout=2100)
-            command_sequence.dump_profile_cookies(100)
+            command_sequence.dump_profile(100)
             manager.execute_command_sequence(command_sequence, index='**')
 
         manager.close()
