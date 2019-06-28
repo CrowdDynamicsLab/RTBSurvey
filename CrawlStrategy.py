@@ -135,6 +135,7 @@ class CrawlStrategy:
             for href in valid_divs:
                 self.insert_visit(manager_params, crawl_id, href)
                 try:
+                    print 'begin get'
                     webdriver.get(href)
                     wait_until_loaded(webdriver, 3)
                     print 'loaded {}'.format(href)
