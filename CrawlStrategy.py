@@ -134,12 +134,8 @@ class CrawlStrategy:
             shuffle(valid_divs)
             for href in valid_divs:
                 self.insert_visit(manager_params, crawl_id, href)
-                try:
-                    print 'begin get'
-                    webdriver.get(href)
-                    print 'finish get, begin wait_until_loaded'
-                    wait_until_loaded(webdriver, 3)
-                    print 'finish wait_until_loaded'
+                try:                    
+                    webdriver.get(href)                    
                     print 'loaded {}'.format(href)
                     num_scrolls = 0
                     current_scroll_percent = -1
@@ -218,12 +214,19 @@ class CrawlStrategy:
 
         # crawl our landing pages plus their children
         for lp, rule in self.landing_and_extraction.iteritems():
-            command_sequence = CommandSequence.CommandSequence(lp)
-            command_sequence.get(sleep=3, timeout=100)
-            my_function = self.my_custom_function(lp, rule)
-            command_sequence.run_custom_function(my_function, (), timeout=3000)
-            command_sequence.dump_profile(dump_folder)
-            manager.execute_command_sequence(command_sequence, index='**')
+            tries = 0
+            while tries < 10:
+                try:
+                    tries += 1
+                    command_sequence = CommandSequence.CommandSequence(lp)
+                    command_sequence.get(sleep=3, timeout=100)
+                    my_function = self.my_custom_function(lp, rule)
+                    command_sequence.run_custom_function(my_function, (), timeout=3000)
+                    command_sequence.dump_profile(dump_folder)
+                    manager.execute_command_sequence(command_sequence, index='**')
+                except Exception as e:
+                    print 'error trying a land+extract on {}'.format(lp)
+                    print traceback.format_exc()
 
         for site in BASELINE_PAGES:
             command_sequence = CommandSequence.CommandSequence(site)
