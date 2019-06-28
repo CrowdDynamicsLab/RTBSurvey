@@ -223,10 +223,11 @@ class CrawlStrategy:
                     my_function = self.my_custom_function(lp, rule)
                     command_sequence.run_custom_function(my_function, (), timeout=60)
                     command_sequence.dump_profile(dump_folder)
-                    manager.execute_command_sequence(command_sequence, index='**')
+                    manager.execute_command_sequence(command_sequence, index='**')                    
                 except Exception as e:
                     print 'error trying a land+extract on {}'.format(lp)
                     print traceback.format_exc()
+                tries = 10
 
         for site in BASELINE_PAGES:
             command_sequence = CommandSequence.CommandSequence(site)
