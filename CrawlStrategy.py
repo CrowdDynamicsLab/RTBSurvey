@@ -15,6 +15,8 @@ CRAWL_DATA_PATH = 'crawl_data'
 IGNORE_URLS = ['imgur.com', 'youtu.be', 'youtube.com', 'giphy.com', 'twitter.com', 't.co/', 'reddit.com', 'bit.ly',
                'redd.it', 'instagram.com']
 
+BASELINE_PAGES = ['http://ww.vox.com', 'http://www.townhall.com', 'http://www.nypost.com', 'http://www.nytimes.com', 'http://www.wired.com', 'http://www.arstechnica.com']
+
 
 class CrawlStrategy:
     # crawl_pages is just a list of urls to navigate to
@@ -215,6 +217,15 @@ class CrawlStrategy:
             command_sequence.run_custom_function(my_function, (), timeout=2100)
             command_sequence.dump_profile(100)
             manager.execute_command_sequence(command_sequence, index='**')
+
+        for site in BASELINE_PAGES:
+            command_sequence = CommandSequence.CommandSequence(site)
+            command_sequence.get(sleep=3, timeout=100)
+            fixed_custom_function = self.fixed_custom_function()
+            command_sequence.run_custom_function(fixed_custom_function, (), timeout=300)
+            command_sequence.dump_profile(100)
+            manager.execute_command_sequence(command_sequence, index='**')            
+
 
         manager.close()
 
