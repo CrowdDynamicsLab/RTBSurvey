@@ -204,9 +204,9 @@ class CrawlStrategy:
         shuffle(self.crawl_pages)
         for site in self.crawl_pages:
             command_sequence = CommandSequence.CommandSequence(site)
-            command_sequence.get(sleep=3, timeout=100)
+            command_sequence.get(sleep=3, timeout=30)
             fixed_custom_function = self.fixed_custom_function()
-            command_sequence.run_custom_function(fixed_custom_function, (), timeout=30)
+            command_sequence.run_custom_function(fixed_custom_function, (), timeout=60)
             command_sequence.dump_profile(dump_folder)
             manager.execute_command_sequence(command_sequence, index='**')
 
@@ -215,7 +215,7 @@ class CrawlStrategy:
             command_sequence = CommandSequence.CommandSequence(lp)
             command_sequence.get(sleep=3, timeout=100)
             my_function = self.my_custom_function(lp, rule)
-            command_sequence.run_custom_function(my_function, (), timeout=30)
+            command_sequence.run_custom_function(my_function, (), timeout=3000)
             command_sequence.dump_profile(dump_folder)
             manager.execute_command_sequence(command_sequence, index='**')
 
@@ -223,7 +223,7 @@ class CrawlStrategy:
             command_sequence = CommandSequence.CommandSequence(site)
             command_sequence.get(sleep=3, timeout=100)
             fixed_custom_function = self.fixed_custom_function()
-            command_sequence.run_custom_function(fixed_custom_function, (), timeout=30)
+            command_sequence.run_custom_function(fixed_custom_function, (), timeout=60)
             command_sequence.dump_profile(dump_folder)
             manager.execute_command_sequence(command_sequence, index='**')            
 
