@@ -134,21 +134,25 @@ class CrawlStrategy:
             shuffle(valid_divs)
             for href in valid_divs:
                 self.insert_visit(manager_params, crawl_id, href)
-                webdriver.get(href)
-                wait_until_loaded(webdriver, 30)
-                print 'loaded {}'.format(href)
-                num_scrolls = 0
-                current_scroll_percent = -1
-                while not is_percent_scrolled(webdriver, .6) and num_scrolls < 40:
-                    scroll_down(webdriver)
-                    last_scroll_percent = current_scroll_percent
-                    current_scroll_percent = scroll_percent(webdriver)
-                    print 'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent)
-                    if current_scroll_percent <= last_scroll_percent:
-                        break
-                    num_scrolls += 1
-                    print 'num_scrolls: {}'.format(num_scrolls)
-                    time.sleep(2*random())
+                try:
+                    webdriver.get(href)
+                    wait_until_loaded(webdriver, 3)
+                    print 'loaded {}'.format(href)
+                    num_scrolls = 0
+                    current_scroll_percent = -1
+                    while not is_percent_scrolled(webdriver, .6) and num_scrolls < 40:
+                        scroll_down(webdriver)
+                        last_scroll_percent = current_scroll_percent
+                        current_scroll_percent = scroll_percent(webdriver)
+                        print 'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent)
+                        if current_scroll_percent <= last_scroll_percent:
+                            break
+                        num_scrolls += 1
+                        print 'num_scrolls: {}'.format(num_scrolls)
+                        time.sleep(2*random())
+                except Exception as e:
+                    print 'error getting {}'.format(href)
+                    print traceback.format_exc()    
 
                 time.sleep(2 * random())
                 print 'done scrolling'
