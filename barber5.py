@@ -34,15 +34,13 @@ def setup_barber5_reddit():
 
     crawl_dict = {
         'https://www.reddit.com/r/malefashionadvice/': get_reddit_wrapper(),
-        'https://www.reddit.com/r/Sneakers/': get_reddit_wrapper(),
-        'https://www.reddit.com/r/news': get_reddit_wrapper(5)
+        'https://www.reddit.com/r/Sneakers/': get_reddit_wrapper()        
     }
     cs = CrawlStrategy("malefashion", [], crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
 
     crawl_dict = {
-        'https://www.reddit.com/r/TwoXChromosomes/': get_reddit_wrapper(),
-        'https://www.reddit.com/r/news': get_reddit_wrapper(5)
+        'https://www.reddit.com/r/TwoXChromosomes/': get_reddit_wrapper()
     }
 
     cs = CrawlStrategy('twox', [], crawl_dict, time_restrictions)
@@ -50,8 +48,7 @@ def setup_barber5_reddit():
 
     crawl_dict = {
         'https://www.reddit.com/r/raisingKids': get_reddit_wrapper(),
-        'https://www.reddit.com/r/Newparents': get_reddit_wrapper(),
-        'https://www.reddit.com/r/news': get_reddit_wrapper(5)
+        'https://www.reddit.com/r/Newparents': get_reddit_wrapper()        
     }
     cs = CrawlStrategy('parenting', [], crawl_dict, time_restrictions)
     crawl_strategies.append(cs)
