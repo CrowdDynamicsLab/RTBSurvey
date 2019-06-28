@@ -221,7 +221,7 @@ class CrawlStrategy:
                     command_sequence = CommandSequence.CommandSequence(lp)
                     command_sequence.get(sleep=3, timeout=100)
                     my_function = self.my_custom_function(lp, rule)
-                    command_sequence.run_custom_function(my_function, (), timeout=3000)
+                    command_sequence.run_custom_function(my_function, (), timeout=60)
                     command_sequence.dump_profile(dump_folder)
                     manager.execute_command_sequence(command_sequence, index='**')
                 except Exception as e:
