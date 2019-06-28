@@ -137,7 +137,9 @@ class CrawlStrategy:
                 try:
                     print 'begin get'
                     webdriver.get(href)
+                    print 'finish get, begin wait_until_loaded'
                     wait_until_loaded(webdriver, 3)
+                    print 'finish wait_until_loaded'
                     print 'loaded {}'.format(href)
                     num_scrolls = 0
                     current_scroll_percent = -1
