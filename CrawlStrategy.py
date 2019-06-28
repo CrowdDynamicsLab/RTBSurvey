@@ -12,7 +12,7 @@ from OpenWPM.automation.utilities import db_utils
 
 CRAWL_DATA_PATH = 'crawl_data'
 
-IGNORE_URLS = ['imgur.com', 'youtu.be', 'youtube.com', 'giphy.com', 'twitter.com', 't.co', 'reddit.com', 'bit.ly',
+IGNORE_URLS = ['imgur.com', 'youtu.be', 'youtube.com', 'giphy.com', 'twitter.com', 't.co/', 'reddit.com', 'bit.ly',
                'redd.it', 'instagram.com']
 
 
