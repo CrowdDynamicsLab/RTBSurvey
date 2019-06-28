@@ -1,5 +1,5 @@
 ## Checking out this repository
-We are using OpenWPM as a submodule, so after cloning this repository, cd into the directory and type `git submodule update --init OpenWPM/` then you will probably have to cd into the OpenWPM directory and `git pull origin master`. This may cause problems for you if you don't have ssh set up with Github. See these two pages to do this: [here](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/) and [here](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
+We are using OpenWPM as a submodule, so after cloning this repository, cd into the directory and type `git submodule update --init OpenWPM/` then you will probably have to cd into the OpenWPM directory and `git pull origin master`. This may cause problems for you if you don't have ssh set up with Github. See these two pages to do this: [here](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/) and [here](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/). Once you have done the above, go into the `OpenWPM` directory and type `git status` if it says something about `HEAD detached` then type `git checkout master`
 
 You will then have to install OpenWPM locally (this will likely be hard to do on anything but Linux)
 To do this, cd into the OpenWPM directory and run both `install.sh` and `install-dev.sh`
@@ -21,4 +21,4 @@ Finally, if you want the crawl to have specific time of day or time between craw
 
 
 ## Rebuilding the firefox extension
-If this ever becomes necessary, the following should do it first `cd openWPM/automation/Extension'` and then type `jpm xpi`
+Just run `./build-extension.sh` in the `OpenWPM` directory
