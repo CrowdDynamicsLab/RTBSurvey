@@ -189,14 +189,15 @@ class CrawlStrategy:
         browser_params[0]['save_all_content'] = True
         # ensures profile is saved
         browser_params[0]['headless']=True
-        browser_params[0]['profile_archive_dir'] = 'profiles/{}/'.format(self.profile_name)
+        dump_folder = 'profiles/{}/'.format(self.profile_name)
+        browser_params[0]['profile_archive_dir'] = dump_folder
         # logging
         manager_params['data_directory'] = 'crawl_data/{}/'.format(self.profile_name)
         manager_params['log_directory'] = 'crawl_data/{}/'.format(self.profile_name)
         # load profile if need be
         if os.path.isfile('profiles/{}/profile.tar'.format(self.profile_name)) or os.path.isfile(
                 'profiles/{}/profile.tar.gz'.format(self.profile_name)):
-            browser_params[0]['profile_tar'] = 'profiles/{}/'.format(self.profile_name)
+            browser_params[0]['profile_tar'] = dump_folder
         manager = TaskManager.TaskManager(manager_params, browser_params)
 
         # crawl our fixed pages
@@ -206,7 +207,7 @@ class CrawlStrategy:
             command_sequence.get(sleep=3, timeout=100)
             fixed_custom_function = self.fixed_custom_function()
             command_sequence.run_custom_function(fixed_custom_function, (), timeout=300)
-            command_sequence.dump_profile(100)
+            command_sequence.dump_profile(dump_folder)
             manager.execute_command_sequence(command_sequence, index='**')
 
         # crawl our landing pages plus their children
@@ -215,7 +216,7 @@ class CrawlStrategy:
             command_sequence.get(sleep=3, timeout=100)
             my_function = self.my_custom_function(lp, rule)
             command_sequence.run_custom_function(my_function, (), timeout=2100)
-            command_sequence.dump_profile(100)
+            command_sequence.dump_profile(dump_folder)
             manager.execute_command_sequence(command_sequence, index='**')
 
         for site in BASELINE_PAGES:
@@ -223,7 +224,7 @@ class CrawlStrategy:
             command_sequence.get(sleep=3, timeout=100)
             fixed_custom_function = self.fixed_custom_function()
             command_sequence.run_custom_function(fixed_custom_function, (), timeout=300)
-            command_sequence.dump_profile(100)
+            command_sequence.dump_profile(dump_folder)
             manager.execute_command_sequence(command_sequence, index='**')            
 
 
