@@ -5,7 +5,7 @@ from OpenWPM.automation import TaskManager, CommandSequence
 import os
 import time
 from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, \
-    is_percent_scrolled, scroll_percent
+    is_percent_scrolled, scroll_percent, wait_until_loaded
 from extractors import get_reddit_wrapper
 from OpenWPM.automation.SocketInterface import clientsocket
 from OpenWPM.automation.utilities import db_utils
@@ -135,6 +135,7 @@ class CrawlStrategy:
             for href in valid_divs:
                 self.insert_visit(manager_params, crawl_id, href)
                 webdriver.get(href)
+                wait_until_loaded(webdriver, 30)
                 print 'loaded {}'.format(href)
                 num_scrolls = 0
                 current_scroll_percent = -1
@@ -155,9 +156,7 @@ class CrawlStrategy:
                     webdriver.get(landing_page)
                 except Exception as e:
                     print 'error getting {}'.format(landing_page)
-                    print traceback.format_exc()
-
-                time.sleep(3)
+                    print traceback.format_exc()                
         return result
 
     @staticmethod
