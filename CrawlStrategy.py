@@ -13,7 +13,7 @@ from OpenWPM.automation.utilities import db_utils
 CRAWL_DATA_PATH = 'crawl_data'
 
 IGNORE_URLS = ['imgur.com', 'youtu.be', 'youtube.com', 'giphy.com', 'twitter.com', 't.co/', 'reddit.com', 'bit.ly',
-               'redd.it', 'instagram.com']
+               'redd.it', 'instagram.com', 'overcast.fm/']
 
 BASELINE_PAGES = ['http://ww.vox.com', 'http://www.townhall.com', 'http://www.nypost.com', 'http://www.nytimes.com', 'http://www.wired.com', 'http://www.arstechnica.com']
 
