@@ -76,8 +76,8 @@ class CrawlStrategy:
         sock = clientsocket()
         sock.connect(*manager_params['aggregator_address'])
         query = "CREATE TABLE IF NOT EXISTS crawl_visits (visit_id INTEGER PRIMARY KEY AUTOINCREMENT, " \
-                "crawl_id INTEGER NOT NULL, url TEXT NOT NULL)"
-        sock.send(("create_table", query))
+                "crawl_id INTEGER NOT NULL, url TEXT NOT NULL UNIQUE, visited INTEGER DEFAULT 0)"
+        sock.send(("create_table", query))                
         sock.close()
         time.sleep(3)
 
@@ -98,7 +98,7 @@ class CrawlStrategy:
         sock.close()
 
     @staticmethod
-    def query_visits(manager_params, href):
+    def visit_allowed(manager_params, href):
         for bad in IGNORE_URLS:
             if href.find(bad) != -1:
                 return False
@@ -110,30 +110,43 @@ class CrawlStrategy:
         )
         return len(query_result) == 0
 
-    def my_custom_function(self, landing_page, rule):
+    @staticmethod
+    def get_pending_visits(manager_params):
+        query = "SELECT url FROM crawl_visits WHERE visited=0" 
+        query_result = db_utils.query_db(
+            manager_params['database_name'],
+            query,
+            as_tuple=True
+        )
+        return query_result
+
+    def extraction_function(self, landing_page, rule):
         def result(**kwargs):
             webdriver = kwargs['driver']
             manager_params = kwargs['manager_params']
             crawl_id = kwargs['browser_params']['crawl_id']
             self.setup_visitdb(manager_params)
-            candidate_divs = rule(webdriver)
-            valid_divs = []
+            candidate_divs = rule(webdriver)            
             for cd in candidate_divs:
                 href = cd.get_attribute('href')
                 try:
-                    if self.query_visits(manager_params, href):
+                    if self.visit_allowed(manager_params, href):
                         print 'can crawl: {}'.format(href)
-                        valid_divs.append(href)
+                        self.insert_visit(manager_params, crawl_id, href)
                     else:
                         print 'cannot crawl (already visited or on blacklist): {}'.format(href)
 
                 except Exception as e:
                     print "database likely doesn't exist yet"
-                    print traceback.format_exc()
+                    print traceback.format_exc()                          
+        return result
+
+    def crawl_function(self):
+        def result(**kwargs):
             print 'got {} potential links'.format(len(valid_divs))
             shuffle(valid_divs)
             for href in valid_divs:
-                self.insert_visit(manager_params, crawl_id, href)
+                self.update_visit(manager_params, crawl_id, href)
                 try:                    
                     webdriver.get(href)                    
                     print 'loaded {}'.format(href)
@@ -159,8 +172,7 @@ class CrawlStrategy:
                     webdriver.get(landing_page)
                 except Exception as e:
                     print 'error getting {}'.format(landing_page)
-                    print traceback.format_exc()                
-        return result
+                    print traceback.format_exc()  
 
     @staticmethod
     def fixed_custom_function():
@@ -214,6 +226,11 @@ class CrawlStrategy:
 
         # crawl our landing pages plus their children
         for lp, rule in self.landing_and_extraction.iteritems():
+            # todo this is currently broken, no exception is thrown when a timeout happens
+            # I think it just uses some queue and queues up work, it iterates through this whole landing_and_extraction dict immediately
+            # So what i need to do is break this out into two functions
+            # one for getting the pages to crawl
+            # and one for crawling them
             tries = 0
             while tries < 10:
                 try:

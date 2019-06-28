@@ -1,6 +1,11 @@
 from extractors import get_reddit_wrapper
 from CrawlStrategy import CrawlStrategy
 
+# TODO: make the reddit getter actually exactly satisfy its argument
+# right now if we call get_reddit_wrapper(30) we get 30 stories or fewer
+# with 30 only if we have scrolled 30 into view after a view scroll downs
+# this function should actually continue to scroll until it has enough 
+# stories to satisfy the caller
 def setup_barber5_reddit():
     crawl_strategies = []
 
