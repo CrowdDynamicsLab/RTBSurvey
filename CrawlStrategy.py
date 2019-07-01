@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
 import traceback
 from random import shuffle, random
 import datetime
@@ -5,7 +8,7 @@ from OpenWPM.automation import TaskManager, CommandSequence
 import os
 import time
 from OpenWPM.automation.Commands.utils.webdriver_extensions import scroll_down, \
-    is_percent_scrolled, scroll_percent, wait_until_loaded
+    is_percent_scrolled, scroll_percent
 from extractors import get_reddit_wrapper
 from OpenWPM.automation.SocketInterface import clientsocket
 from OpenWPM.automation.utilities import db_utils
@@ -13,9 +16,10 @@ from OpenWPM.automation.utilities import db_utils
 CRAWL_DATA_PATH = 'crawl_data'
 
 IGNORE_URLS = ['imgur.com', 'youtu.be', 'youtube.com', 'giphy.com', 'twitter.com', 't.co/', 'reddit.com', 'bit.ly',
-               'redd.it', 'instagram.com', 'overcast.fm/']
+               'redd.it', 'instagram.com', 'overcast.fm/', 'docs.google.com/']
 
-BASELINE_PAGES = ['http://ww.vox.com', 'http://www.townhall.com', 'http://www.nypost.com', 'http://www.nytimes.com', 'http://www.wired.com', 'http://www.arstechnica.com']
+BASELINE_PAGES = ['http://ww.vox.com', 'http://www.townhall.com', 'http://www.nypost.com', 'http://www.nytimes.com',
+                  'http://www.wired.com', 'http://www.arstechnica.com']
 
 
 class CrawlStrategy:
@@ -112,16 +116,28 @@ class CrawlStrategy:
 
     @staticmethod
     def get_pending_visits(manager_params):
-        query = "SELECT url FROM crawl_visits WHERE visited=0" 
+        print('pending visits: querying')
+        query = "SELECT url, visit_id FROM crawl_visits WHERE visited=0 LIMIT 10"
         query_result = db_utils.query_db(
             manager_params['database_name'],
             query,
             as_tuple=True
         )
+        print('pending visits: got {}'.format(query_result))
         return query_result
 
-    def extraction_function(self, landing_page, rule):
+    @staticmethod
+    def update_visit(manager_params, visit_id):
+        query = "UPDATE crawl_visits SET visited=1 WHERE visit_id=%d" % visit_id
+        sock = clientsocket()
+        sock.connect(*manager_params['aggregator_address'])
+        query = ('update', query)
+        sock.send(query)
+        sock.close()
+
+    def extraction_function(self, rule):
         def result(**kwargs):
+            print('extraction function: begin')
             webdriver = kwargs['driver']
             manager_params = kwargs['manager_params']
             crawl_id = kwargs['browser_params']['crawl_id']
@@ -131,48 +147,50 @@ class CrawlStrategy:
                 href = cd.get_attribute('href')
                 try:
                     if self.visit_allowed(manager_params, href):
-                        print 'can crawl: {}'.format(href)
+                        print('can crawl: {}'.format(href))
                         self.insert_visit(manager_params, crawl_id, href)
                     else:
-                        print 'cannot crawl (already visited or on blacklist): {}'.format(href)
-
+                        print('cannot crawl (already visited or on blacklist): {}'.format(href))
                 except Exception as e:
-                    print "database likely doesn't exist yet"
-                    print traceback.format_exc()                          
+                    print("database likely doesn't exist yet")
+                    print(traceback.format_exc())
+            print("extraction function: finished")
+            time.sleep(3)
         return result
 
     def crawl_function(self):
         def result(**kwargs):
-            print 'got {} potential links'.format(len(valid_divs))
-            shuffle(valid_divs)
-            for href in valid_divs:
-                self.update_visit(manager_params, crawl_id, href)
+            webdriver = kwargs['driver']
+            manager_params = kwargs['manager_params']
+            visits = self.get_pending_visits(manager_params)
+            print('got {} potential links'.format(len(visits)))
+            shuffle(visits)
+            for visit in visits:
+                (href, visit_id) = visit
+                self.update_visit(manager_params, visit_id)
                 try:                    
-                    webdriver.get(href)                    
-                    print 'loaded {}'.format(href)
+                    webdriver.get(href)
+                    print('loaded {}'.format(href))
                     num_scrolls = 0
                     current_scroll_percent = -1
                     while not is_percent_scrolled(webdriver, .6) and num_scrolls < 40:
                         scroll_down(webdriver)
                         last_scroll_percent = current_scroll_percent
                         current_scroll_percent = scroll_percent(webdriver)
-                        print 'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent)
+                        print(
+                            'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent))
                         if current_scroll_percent <= last_scroll_percent:
                             break
                         num_scrolls += 1
-                        print 'num_scrolls: {}'.format(num_scrolls)
+                        print('num_scrolls: {}'.format(num_scrolls))
                         time.sleep(2*random())
                 except Exception as e:
-                    print 'error getting {}'.format(href)
-                    print traceback.format_exc()    
+                    print('error getting {}'.format(href))
+                    print(traceback.format_exc())
 
                 time.sleep(2 * random())
-                print 'done scrolling'
-                try:
-                    webdriver.get(landing_page)
-                except Exception as e:
-                    print 'error getting {}'.format(landing_page)
-                    print traceback.format_exc()  
+                print('done scrolling')
+        return result
 
     @staticmethod
     def fixed_custom_function():
@@ -184,15 +202,16 @@ class CrawlStrategy:
                 scroll_down(webdriver)
                 last_scroll_percent = current_scroll_percent
                 current_scroll_percent = scroll_percent(webdriver)
-                print 'last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent)
+                print('last_percent: {}, current_percent: {}'.format(last_scroll_percent, current_scroll_percent))
                 if current_scroll_percent <= last_scroll_percent:
                     break
                 num_scrolls += 1
-                print 'num_scrolls: {}'.format(num_scrolls)
+                print('num_scrolls: {}'.format(num_scrolls))
                 time.sleep(2 * random())
 
             time.sleep(2 * random())
-            print 'done scrolling'
+            print('done scrolling')
+
         return result
 
     def crawl(self):
@@ -226,25 +245,25 @@ class CrawlStrategy:
 
         # crawl our landing pages plus their children
         for lp, rule in self.landing_and_extraction.iteritems():
-            # todo this is currently broken, no exception is thrown when a timeout happens
             # I think it just uses some queue and queues up work, it iterates through this whole landing_and_extraction dict immediately
             # So what i need to do is break this out into two functions
             # one for getting the pages to crawl
             # and one for crawling them
-            tries = 0
-            while tries < 10:
-                try:
-                    tries += 1
-                    command_sequence = CommandSequence.CommandSequence(lp)
-                    command_sequence.get(sleep=3, timeout=100)
-                    my_function = self.my_custom_function(lp, rule)
-                    command_sequence.run_custom_function(my_function, (), timeout=60)
-                    command_sequence.dump_profile(dump_folder)
-                    manager.execute_command_sequence(command_sequence, index='**')                    
-                except Exception as e:
-                    print 'error trying a land+extract on {}'.format(lp)
-                    print traceback.format_exc()
-                tries = 10
+            command_sequence = CommandSequence.CommandSequence(lp)
+            command_sequence.get(sleep=3, timeout=100)
+            my_extraction_function = self.extraction_function(rule)
+            my_crawl_function = self.crawl_function()
+            command_sequence.run_custom_function(my_extraction_function, (), timeout=60)
+            command_sequence.run_custom_function(my_crawl_function, (), timeout=300)
+            command_sequence.dump_profile(dump_folder)
+            manager.execute_command_sequence(command_sequence, index='**')
+            for _ in range(5):
+                command_sequence = CommandSequence.CommandSequence(lp)
+                command_sequence.get(sleep=3, timeout=100)
+                my_crawl_function = self.crawl_function()
+                command_sequence.run_custom_function(my_crawl_function, (), timeout=300)
+                command_sequence.dump_profile(dump_folder)
+                manager.execute_command_sequence(command_sequence, index='**')
 
         for site in BASELINE_PAGES:
             command_sequence = CommandSequence.CommandSequence(site)
@@ -252,9 +271,7 @@ class CrawlStrategy:
             fixed_custom_function = self.fixed_custom_function()
             command_sequence.run_custom_function(fixed_custom_function, (), timeout=60)
             command_sequence.dump_profile(dump_folder)
-            manager.execute_command_sequence(command_sequence, index='**')            
-
-
+            manager.execute_command_sequence(command_sequence, index='**')
         manager.close()
 
 
