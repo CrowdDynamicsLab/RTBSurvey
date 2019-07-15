@@ -38,7 +38,7 @@ def get_cygnus_bids_for_profile(profile_name):
         "SELECT * FROM http_responses WHERE url like '%cygnus%'")
     rows = cur.fetchall()
     for row in rows:
-        content = row['response_content']
+        content = row['content_hash']
         bids = parse_bids_from_cygnus_response(content)
         for bid in bids:
             print bid['ext']['pricelevel']
