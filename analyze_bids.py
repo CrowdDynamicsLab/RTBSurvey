@@ -42,7 +42,7 @@ def get_cygnus_bids_for_profile(profile_name):
         bids = parse_bids_from_cygnus_response(content)
         for bid in bids:
             print bid['ext']['pricelevel']
-            print row['referrer']
+            #print row['referrer']
             print row['time_stamp']
     conn.close()
 
