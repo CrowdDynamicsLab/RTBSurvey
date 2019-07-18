@@ -97,7 +97,7 @@ def setup_professional():
         "https://www.wsj.com": ex.get_wsj_links
     }
 
-    cs = CrawlStrategy('neutral', [], crawl_dict)
+    cs = CrawlStrategy('professional', [], crawl_dict)
     crawl_strategies.append(cs)
     return crawl_strategies
 
@@ -108,5 +108,6 @@ def setup_cooking():
     crawl_dict = {
         "https://www.cooking.nytimes.com": ex.get_cookingnyt,
         "https://www.reddit.com/r/recipes": ex.get_reddit_wrapper,
-        "https://www.allrecipes.com/": ex.get_allrec
+        "https://www.allrecipes.com/": ex.get_all_rec
     }
+    cs = CrawlStrategy('cooking', [], crawl_dict)
