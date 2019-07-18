@@ -26,11 +26,11 @@ def setup_pop_sports():
     crawl_strategies = []
 
     crawl_dict = {
-        "https://www.reddit.com/r/nfl/": ex.get_reddit_stories,
-        "https://www.reddit.com/r/nba/": ex.get_reddit_stories,
-        "https://www.reddit.com/r/baseball/": ex.get_reddit_stories,
-        "https://www.reddit.com/r/hockey/": ex.get_reddit_stories,
-        "https://www.reddit.com/r/soccer/": ex.get_reddit_stories
+        "https://www.reddit.com/r/nfl/": ex.get_reddit_wrapper,
+        "https://www.reddit.com/r/nba/": ex.get_reddit_wrapper,
+        "https://www.reddit.com/r/baseball/": ex.get_reddit_wrapper,
+        "https://www.reddit.com/r/hockey/": ex.get_reddit_wrapper,
+        "https://www.reddit.com/r/soccer/": ex.get_reddit_wrapper
     }
 
     cs = CrawlStrategy('pop_sports', [], crawl_dict)
@@ -42,9 +42,9 @@ def setup_niche_sports():
     crawl_strategies = []
 
     crawl_dict = {
-        "https://www.reddit.com/r/Cricket/": ex.get_reddit_stories,
-        "https://www.reddit.com/r/waterpolo/": ex.get_reddit_stories,
-        "https://www.reddit.com/r/golf/": ex.get_reddit_stories
+        "https://www.reddit.com/r/Cricket/": ex.get_reddit_wrapper,
+        "https://www.reddit.com/r/waterpolo/": ex.get_reddit_wrapper,
+        "https://www.reddit.com/r/golf/": ex.get_reddit_wrapper
     }
 
     cs = CrawlStrategy('niche_sports', [], crawl_dict)
@@ -59,7 +59,7 @@ def setup_liberal():
         "https://www.vox.com/": ex.get_vox_articles,
         "https://slate.com/":ex.get_slate_articles,
         "https://www.huffingtonpost.com": ex.get_huff_articles,
-        "https://www.reddit.com/r/TwoXChromosomes/": ex.get_reddit_stories
+        "https://www.reddit.com/r/TwoXChromosomes/": ex.get_reddit_wrapper
     }
 
     cs = CrawlStrategy('liberal', [], crawl_dict)
@@ -74,7 +74,7 @@ def setup_conservative():
         "https://www.breitbart.com": ex.get_ac_articles,
         "https://www.theamericanconservative.com": ex.get_ac_articles,
         "http://thefederalist.com": ex.get_ac_articles,
-        "https://www.reddit.com/r/The_Donald/": ex.get_reddit_stories
+        "https://www.reddit.com/r/The_Donald/": ex.get_reddit_wrapper
     }
 
     fixed_crawls = [
@@ -107,6 +107,6 @@ def setup_cooking():
 
     crawl_dict = {
         "https://www.cooking.nytimes.com": ex.get_cookingnyt,
-        "https://www.reddit.com/r/recipes": ex.get_reddit_stories,
+        "https://www.reddit.com/r/recipes": ex.get_reddit_wrapper,
         "https://www.allrecipes.com/": ex.get_allrec
     }
