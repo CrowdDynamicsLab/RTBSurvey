@@ -16,7 +16,7 @@ from OpenWPM.automation.utilities import db_utils
 CRAWL_DATA_PATH = 'crawl_data'
 
 IGNORE_URLS = ['imgur.com', 'youtu.be', 'youtube.com', 'giphy.com', 'twitter.com', 't.co/', 'reddit.com', 'bit.ly',
-               'redd.it', 'instagram.com', 'overcast.fm/', 'docs.google.com/']
+               'redd.it', 'instagram.com', 'overcast.fm/', 'docs.google.com/', 'engadget.com', 'cnn.com', 'foxnews.com']
 
 BASELINE_PAGES = ['http://www.cnn.com', 'http://www.foxnews.com', 'http://www.engadget.com']
 
@@ -264,7 +264,7 @@ class CrawlStrategy:
                 command_sequence.dump_profile(dump_folder)
                 manager.execute_command_sequence(command_sequence, index='**')
 
-        for site in BASELINE_PAGES:
+        for site in BASELINE_PAGES:            
             command_sequence = CommandSequence.CommandSequence(site)
             command_sequence.get(sleep=3, timeout=100)
             fixed_custom_function = self.fixed_custom_function()
