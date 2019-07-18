@@ -94,7 +94,7 @@ def setup_professional():
     crawl_dict = {
         "https://www.bloomberg.com": ex.get_bloomberg_articles,
         "https://www.economist.com": ex.get_economist_articles,
-        "https://www.wsj.com": ex.get_wsj_artcles
+        "https://www.wsj.com": ex.get_wsj_links
     }
 
     cs = CrawlStrategy('neutral', [], crawl_dict)
