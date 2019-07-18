@@ -111,3 +111,5 @@ def setup_cooking():
         "https://www.allrecipes.com/": ex.get_all_rec
     }
     cs = CrawlStrategy('cooking', [], crawl_dict)
+    crawl_strategies.append(cs)
+    return crawl_strategies
