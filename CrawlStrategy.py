@@ -271,6 +271,7 @@ class CrawlStrategy:
             command_sequence.run_custom_function(fixed_custom_function, (), timeout=60)
             command_sequence.dump_profile(dump_folder)
             manager.execute_command_sequence(command_sequence, index='**')
+            time.sleep(5)
         manager.close()
 
 
