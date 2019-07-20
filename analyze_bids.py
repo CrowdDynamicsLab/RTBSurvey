@@ -5,11 +5,13 @@ import matplotlib.pyplot as plt
 
 BASELINE_PAGES = ['www.cnn.com', 'www.foxnews.com/', 'www.engadget.com']
 
+
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
+
 
 def parse_bids_from_cygnus_response(content):    
     if content[0] == '"':
@@ -37,14 +39,16 @@ def parse_bids_from_cygnus_response(content):
     return result
 
 
-
 def get_cygnus_at_site(profile_name, site_pattern):
     result = []
     conn = sqlite3.connect('crawl_data/{}/crawl-data.sqlite'.format(profile_name))
     conn.row_factory = dict_factory
     cur = conn.cursor()
     cur.execute(
-        "SELECT res.visit_id, res.content_hash, res.time_stamp FROM http_responses as res join http_requests as req on req.request_id=res.request_id WHERE res.url like '%cygnus%' AND (req.top_level_url like '%{}/')".format(site_pattern))
+        "SELECT res.visit_id, res.content_hash, res.time_stamp "
+        "FROM http_responses AS res JOIN http_requests AS req on req.request_id=res.request_id "
+        "AND req.visit_id=res.visit_id "
+        "WHERE res.url like '%cygnus%' AND (req.top_level_url like '%{}/')".format(site_pattern))
     rows = cur.fetchall()
     for row in rows:
         content = row['content_hash']
@@ -56,9 +60,10 @@ def get_cygnus_at_site(profile_name, site_pattern):
                 'source': site_pattern,
                 'visit_id': row['visit_id'],
                 'price': int(bid['ext']['pricelevel'][1:])/100.0
-                })
+                })            
     conn.close()    
     return result
+
 
 # given a string profile name, this will go into the database
 # and retrieve every bid it can
@@ -69,6 +74,7 @@ def get_cygnus_bids_for_profile(profile_name):
     result.extend(get_cygnus_at_site(profile_name, 'engadget.com'))
     return result
 
+
 def plot_data_by_visit(profile, source, visits):
     data = []
     for visit_id, prices in visits.items():
@@ -77,7 +83,6 @@ def plot_data_by_visit(profile, source, visits):
     fig, ax = plt.subplots()
     ax.set_title('Visits for profile {}, site {}'.format(profile, source))
     ax.boxplot(data)
-
     plt.show()
 
 
@@ -95,10 +100,9 @@ def plot_data(data, profile):
     for source, visits in index.items():
         plot_data_by_visit(profile, source, visits)
 
-        
-
-
 
 if __name__ == "__main__":
     cyg_data = get_cygnus_bids_for_profile(sys.argv[1])
+    for t_bid in cyg_data:
+        print('{} {} {} {}'.format(t_bid['visit_id'], t_bid['time_stamp'], t_bid['source'], t_bid['price']))
     plot_data(cyg_data, sys.argv[1])
