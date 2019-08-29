@@ -14,11 +14,12 @@ if __name__ == "__main__":
 
     while True:
         for cs in crawl_strategies:
-        	try:
-	            if cs.can_crawl():
-	                print '{} strategy {} is allowed to crawl, doing so now'.format(datetime.datetime.now().isoformat(' '), cs.profile_name)
-	                cs.crawl()            
-	        except Exception as e:
-	        	print("exception while trying to crawl")
-	        	print(traceback.format_exc())
+            try:
+                if cs.can_crawl():
+                    print('{} strategy {} is allowed to crawl, '
+                          'doing so now'.format(datetime.datetime.now().isoformat(' '), cs.profile_name))
+                    cs.crawl()
+            except Exception as e:
+                print("exception while trying to crawl")
+                print(traceback.format_exc())
         time.sleep(60)
