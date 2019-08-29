@@ -106,7 +106,7 @@ def setup_cooking():
     crawl_strategies = []
 
     crawl_dict = {
-        "https://www.cooking.nytimes.com": ex.get_cookingnyt,
+        "https://cooking.nytimes.com": ex.get_cookingnyt,
         "https://www.reddit.com/r/recipes": ex.get_reddit_wrapper,
         "https://www.allrecipes.com/": ex.get_all_rec
     }
