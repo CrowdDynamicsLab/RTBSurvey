@@ -19,6 +19,7 @@ if __name__ == "__main__":
                     print('{} strategy {} is allowed to crawl, '
                           'doing so now'.format(datetime.datetime.now().isoformat(' '), cs.profile_name))
                     cs.crawl()
+                    cs.visit_baselines()
             except Exception as e:
                 print("exception while trying to crawl")
                 print(traceback.format_exc())
