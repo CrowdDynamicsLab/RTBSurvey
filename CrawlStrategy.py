@@ -266,6 +266,21 @@ class CrawlStrategy:
         time.sleep(30)
         manager.close()
     def visit_baselines(self):
+        manager_params, browser_params = TaskManager.load_default_params()
+        browser_params[0]['http_instrument'] = True
+        browser_params[0]['save_all_content'] = True
+        # ensures profile is saved
+        browser_params[0]['headless']=True
+        dump_folder = 'profiles/{}/'.format(self.profile_name)
+        browser_params[0]['profile_archive_dir'] = dump_folder
+        # logging
+        manager_params['data_directory'] = 'crawl_data/{}/'.format(self.profile_name)
+        manager_params['log_directory'] = 'crawl_data/{}/'.format(self.profile_name)
+        # load profile if need be
+        if os.path.isfile('profiles/{}/profile.tar'.format(self.profile_name)) or os.path.isfile(
+                'profiles/{}/profile.tar.gz'.format(self.profile_name)):
+            browser_params[0]['profile_tar'] = dump_folder
+        manager = TaskManager.TaskManager(manager_params, browser_params)
         for site in BASELINE_PAGES:            
             command_sequence = CommandSequence.CommandSequence(site)
             command_sequence.get(sleep=3, timeout=100)
